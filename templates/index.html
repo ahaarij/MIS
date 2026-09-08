@@ -1677,6 +1677,8 @@ async function _refreshData() {
     const v = _activeView();
     if (v === 'logs') loadLogs();
     if (v === 'users') loadUsers();
+    if (v === 'settings' && currentUserRole === 'superadmin') loadSMTP();
+    loadSettingsFromDB();
   } catch(e) {}
 }
 
