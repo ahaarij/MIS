@@ -30,3 +30,13 @@ env/
 .vscode/
 .idea/
 *.swp
+
+# Binary / design files
+*.xlsx
+*.xls
+*.png
+*.jpg
+*.jpeg
+*.gif
+Inspiration/
+*.bak
