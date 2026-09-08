@@ -28,6 +28,29 @@ app = Flask(__name__)
 _data_version = 0
 _dv_lock = threading.Lock()
 
+# Simple in-memory login rate limiter: {ip: [timestamp, ...]}
+_login_attempts: dict = {}
+_login_lock = threading.Lock()
+_MAX_ATTEMPTS = 10
+_WINDOW_SECS  = 900  # 15 minutes
+
+def _check_rate_limit(ip: str) -> bool:
+    """Return True if the IP is allowed to attempt login."""
+    now = datetime.now().timestamp()
+    with _login_lock:
+        attempts = [t for t in _login_attempts.get(ip, []) if now - t < _WINDOW_SECS]
+        _login_attempts[ip] = attempts
+        return len(attempts) < _MAX_ATTEMPTS
+
+def _record_failed_login(ip: str):
+    now = datetime.now().timestamp()
+    with _login_lock:
+        _login_attempts.setdefault(ip, []).append(now)
+
+def _clear_login_attempts(ip: str):
+    with _login_lock:
+        _login_attempts.pop(ip, None)
+
 def bump_version():
     global _data_version
     with _dv_lock:
@@ -48,6 +71,7 @@ if not _secret:
         with open(_sk_path, 'w') as _f:
             _f.write(_secret)
 app.secret_key = _secret
+app.permanent_session_lifetime = timedelta(hours=12)
 
 # Ordered list of every editable field (no id, sr_no, sort_order, created_at)
 FIELDS = [
@@ -180,6 +204,9 @@ def login():
     if 'user_id' in session:
         return redirect('/')
     if request.method == 'POST':
+        ip = request.remote_addr
+        if not _check_rate_limit(ip):
+            return jsonify({'error': 'Too many failed attempts. Try again in 15 minutes.'}), 429
         data = request.json or {}
         email = data.get('email', '').strip().lower()
         password = data.get('password', '')
@@ -188,12 +215,14 @@ def login():
         if row and check_password_hash(row['password_hash'], password):
             if not row['approved']:
                 return jsonify({'error': 'Your account is pending approval by an admin.'}), 403
+            _clear_login_attempts(ip)
             session.permanent = True
             session['user_id'] = row['id']
             session['user_name'] = row['name']
             session['user_role'] = row['role']
             log_action('Login', f'User "{row["name"]}" ({email}) signed in as {row["role"]} from IP {request.remote_addr}')
             return jsonify({'ok': True})
+        _record_failed_login(ip)
         return jsonify({'error': 'Invalid email or password'}), 401
     return render_template('login.html')
 
@@ -278,8 +307,8 @@ def forgot_password():
                 with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
                     server.login(smtp_email, smtp_pass)
                     server.sendmail(smtp_email, email, msg.as_string())
-            except Exception as e:
-                return jsonify({'error': f'Failed to send email: {str(e)}'}), 500
+            except Exception:
+                return jsonify({'error': 'Failed to send email. Check your SMTP settings.'}), 500
             return jsonify({'ok': True, 'sent': True})
         else:
             # SMTP not configured — return URL for admin to share manually
@@ -320,12 +349,28 @@ def me():
     return jsonify({'id': session['user_id'], 'name': row['name'], 'role': row['role'], 'linked_name': row['linked_name'] or ''})
 
 
+def _get_live_role():
+    """Fetch the user's current role from DB and sync it into session."""
+    uid = session.get('user_id')
+    if not uid:
+        return None
+    with get_db() as conn:
+        row = conn.execute('SELECT role FROM users WHERE id=?', (uid,)).fetchone()
+    if not row:
+        session.clear()
+        return None
+    role = row['role']
+    session['user_role'] = role  # keep session in sync
+    return role
+
+
 def require_admin(f):
     @functools.wraps(f)
     def decorated(*args, **kwargs):
         if 'user_id' not in session:
             return jsonify({'error': 'Unauthorized'}), 401
-        if session.get('user_role') not in ('admin', 'superadmin'):
+        role = _get_live_role()
+        if role not in ('admin', 'superadmin'):
             return jsonify({'error': 'Forbidden'}), 403
         return f(*args, **kwargs)
     return decorated
@@ -336,7 +381,8 @@ def require_superadmin(f):
     def decorated(*args, **kwargs):
         if 'user_id' not in session:
             return jsonify({'error': 'Unauthorized'}), 401
-        if session.get('user_role') != 'superadmin':
+        role = _get_live_role()
+        if role != 'superadmin':
             return jsonify({'error': 'Forbidden'}), 403
         return f(*args, **kwargs)
     return decorated
@@ -416,15 +462,37 @@ def admin_reject_user(uid):
 @app.route('/api/settings', methods=['GET'])
 @require_auth
 def get_settings():
+    is_superadmin = session.get('user_role') == 'superadmin'
     with get_db() as conn:
         rows = conn.execute('SELECT key, value FROM settings').fetchall()
-    return jsonify({r['key']: r['value'] for r in rows})
+    SENSITIVE = {'smtp_password', 'smtp_email'}
+    result = {}
+    for r in rows:
+        if r['key'] in SENSITIVE and not is_superadmin:
+            continue
+        if r['key'] == 'smtp_password':
+            continue  # never send password to client; existence is enough
+        result[r['key']] = r['value']
+    return jsonify(result)
 
+
+SMTP_KEYS = {'smtp_email', 'smtp_password'}
 
 @app.route('/api/settings', methods=['PUT'])
 @require_auth
 def save_settings():
     data = request.json or {}
+    is_superadmin = session.get('user_role') == 'superadmin'
+    is_admin = session.get('user_role') in ('admin', 'superadmin')
+    # SMTP keys require superadmin
+    if any(k in SMTP_KEYS for k in data) and not is_superadmin:
+        return jsonify({'error': 'Forbidden'}), 403
+    # All other settings require at least admin
+    if not is_admin:
+        # Regular users may only write list settings (staff, countries, etc.)
+        LIST_KEYS = {'staff', 'countries', 'activities', 'ratings', 'aecb'}
+        if any(k not in LIST_KEYS for k in data):
+            return jsonify({'error': 'Forbidden'}), 403
     with get_db() as conn:
         for key, value in data.items():
             conn.execute('INSERT INTO settings (key, value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value',
