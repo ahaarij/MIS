@@ -266,6 +266,8 @@ def logout():
 @app.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password():
     if request.method == 'POST':
+        if not _check_rate_limit(request.remote_addr):
+            return jsonify({'ok': True})  # silent throttle, don't reveal rate limit
         data = request.json or {}
         email = data.get('email', '').strip().lower()
         with get_db() as conn:
@@ -462,7 +464,7 @@ def admin_reject_user(uid):
 @app.route('/api/settings', methods=['GET'])
 @require_auth
 def get_settings():
-    is_superadmin = session.get('user_role') == 'superadmin'
+    is_superadmin = _get_live_role() == 'superadmin'
     with get_db() as conn:
         rows = conn.execute('SELECT key, value FROM settings').fetchall()
     SENSITIVE = {'smtp_password', 'smtp_email'}
@@ -482,8 +484,9 @@ SMTP_KEYS = {'smtp_email', 'smtp_password'}
 @require_auth
 def save_settings():
     data = request.json or {}
-    is_superadmin = session.get('user_role') == 'superadmin'
-    is_admin = session.get('user_role') in ('admin', 'superadmin')
+    live_role = _get_live_role()
+    is_superadmin = live_role == 'superadmin'
+    is_admin = live_role in ('admin', 'superadmin')
     # SMTP keys require superadmin
     if any(k in SMTP_KEYS for k in data) and not is_superadmin:
         return jsonify({'error': 'Forbidden'}), 403
@@ -671,7 +674,7 @@ def get_companies():
 
 
 @app.route('/api/companies', methods=['POST'])
-@require_auth
+@require_admin
 def add_company():
     data = request.json
     placeholders = ', '.join(['?'] * len(FIELDS))
@@ -700,7 +703,7 @@ def add_company():
 
 
 @app.route('/api/companies/<int:company_id>', methods=['PUT'])
-@require_auth
+@require_admin
 def update_company(company_id):
     data = request.json
     set_clause = ', '.join(f'{f}=?' for f in FIELDS)
@@ -737,7 +740,7 @@ def update_company(company_id):
 
 
 @app.route('/api/companies/<int:company_id>', methods=['DELETE'])
-@require_auth
+@require_admin
 def delete_company(company_id):
     with get_db() as conn:
         row = conn.execute('SELECT * FROM companies WHERE id=?', (company_id,)).fetchone()
