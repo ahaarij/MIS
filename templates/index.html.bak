@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MIS — Corporate Credit</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+<style>
+:root { --navy:#1a3a5c; --navy-dark:#0f2035; --sidebar-w:210px; }
+
+html, body { height:100%; margin:0; font-family:'Segoe UI',system-ui,sans-serif; overflow:hidden; }
+body { display:flex; background:#f0f4f8; }
+
+/* ── Sidebar ── */
+.sidebar {
+  width:var(--sidebar-w); flex-shrink:0;
+  background:var(--navy); display:flex; flex-direction:column;
+  height:100vh; overflow-y:auto;
+  box-shadow:2px 0 10px rgba(0,0,0,.22); z-index:100;
+}
+.sidebar-brand { padding:1.2rem 1rem .9rem; border-bottom:1px solid rgba(255,255,255,.1); }
+.sb-icon {
+  width:38px; height:38px; background:rgba(255,255,255,.14);
+  border-radius:9px; display:flex; align-items:center; justify-content:center;
+  font-size:1.15rem; color:#fff; margin-bottom:.5rem;
+}
+.sb-title { color:#fff; font-size:.84rem; font-weight:700; line-height:1.2; }
+.sb-sub   { color:#93c5fd; font-size:.67rem; }
+.sidebar-nav { list-style:none; padding:.6rem 0; margin:0; flex:1; }
+.sidebar-nav li {
+  display:flex; align-items:center; gap:.6rem;
+  padding:.6rem .85rem; margin:2px .5rem; border-radius:7px;
+  color:rgba(255,255,255,.6); cursor:pointer;
+  font-size:.83rem; font-weight:500; transition:all .14s;
+}
+.sidebar-nav li i { font-size:.95rem; width:18px; text-align:center; }
+.sidebar-nav li:hover  { background:rgba(255,255,255,.1); color:#fff; }
+.sidebar-nav li.active { background:rgba(255,255,255,.17); color:#fff; font-weight:600; }
+.sidebar-footer { padding:.65rem; border-top:1px solid rgba(255,255,255,.08); color:rgba(255,255,255,.3); font-size:.66rem; text-align:center; }
+
+/* ── Main ── */
+.main-wrap { flex:1; overflow:hidden; display:flex; flex-direction:column; height:100vh; min-width:0; }
+.view { display:none; flex:1; flex-direction:column; overflow:hidden; min-height:0; }
+.view.active { display:flex; }
+.view-header {
+  padding:.8rem 1.4rem; background:#fff;
+  border-bottom:1px solid #e5e7eb; flex-shrink:0;
+  display:flex; align-items:center; gap:.75rem;
+}
+.view-header h1 { font-size:1.05rem; font-weight:700; color:var(--navy); margin:0; }
+.view-header .vsub { font-size:.72rem; color:#64748b; }
+.view-body { flex:1; overflow-y:auto; padding:1.2rem 1.4rem; min-height:0; }
+
+/* ── Dashboard ── */
+.stat-card {
+  background:#fff; border-radius:11px;
+  padding:1rem 1.15rem; box-shadow:0 1px 4px rgba(0,0,0,.07); border-left:4px solid;
+}
+.stat-card .sv { font-size:1.9rem; font-weight:700; line-height:1; }
+.stat-card .sl { font-size:.74rem; color:#64748b; margin-top:.25rem; }
+.s-total { border-color:var(--navy); }
+.s-exp   { border-color:#dc2626; }
+.s-soon  { border-color:#d97706; }
+.s-ok    { border-color:#16a34a; }
+.alerts-panel { background:#fff; border-radius:11px; box-shadow:0 1px 4px rgba(0,0,0,.07); overflow:hidden; }
+.ap-head { background:var(--navy); color:#fff; padding:.65rem 1rem; font-weight:600; font-size:.82rem; display:flex; align-items:center; gap:.5rem; }
+.alert-item { display:flex; align-items:flex-start; gap:.7rem; padding:.65rem 1rem; border-bottom:1px solid #f1f5f9; }
+.alert-item:last-child { border-bottom:none; }
+.alert-dot { width:8px; height:8px; border-radius:50%; margin-top:5px; flex-shrink:0; }
+.alert-dot.expired { background:#dc2626; }
+.alert-dot.soon    { background:#d97706; }
+.ai-co  { font-weight:600; font-size:.81rem; color:#1e293b; }
+.ai-det { font-size:.73rem; color:#64748b; }
+.alert-empty { padding:1.75rem; text-align:center; color:#94a3b8; font-size:.8rem; }
+
+/* ── MIS toolbar ── */
+.mis-toolbar {
+  padding:.55rem 1.4rem; background:#fff;
+  border-bottom:1px solid #e5e7eb;
+  display:flex; align-items:center; gap:.65rem; flex-wrap:wrap; flex-shrink:0;
+}
+.vtoggle { display:flex; gap:3px; }
+.vtoggle button {
+  width:32px; height:32px; padding:0;
+  display:flex; align-items:center; justify-content:center;
+  border:1px solid #d1d5db; background:#fff; border-radius:7px;
+  color:#64748b; cursor:pointer; font-size:.95rem; transition:all .14s;
+}
+.vtoggle button.active { background:var(--navy); border-color:var(--navy); color:#fff; }
+
+/* ── Table ── */
+.tbl-wrap { flex:1; overflow:auto; min-height:0; }
+table.mis { min-width:2150px; margin:0; background:#fff; border-collapse:collapse; }
+table.mis thead th {
+  color:#fff; font-size:.75rem; font-weight:600;
+  padding:7px 7px; white-space:nowrap; text-align:center;
+  border:1px solid rgba(255,255,255,.18); position:sticky; top:0; z-index:20;
+}
+.gh-base  { background:var(--navy) !important; color:#fff !important; }
+.gh-dnb   { background:#1e40af   !important; color:#fff !important; }
+.gh-audit { background:#166534   !important; color:#fff !important; }
+.gh-mgtm  { background:#92400e   !important; color:#fff !important; }
+.gh-cb    { background:#5b21b6   !important; color:#fff !important; }
+thead .sc1 { position:sticky; left:0;    z-index:30; background:var(--navy) !important; }
+thead .sc2 { position:sticky; left:52px; z-index:30; background:var(--navy) !important; }
+thead .sc3 { position:sticky; left:96px; z-index:30; background:var(--navy) !important; border-right:2px solid rgba(255,255,255,.4); }
+table.mis tbody td { font-size:.8rem; padding:6px 7px; vertical-align:middle; border:1px solid #e5e7eb; }
+table.mis tbody tr:nth-child(odd)  td { background:#fff; }
+table.mis tbody tr:nth-child(even) td { background:#f9fafb; }
+table.mis tbody tr:hover td { background:#eff6ff !important; cursor:pointer; }
+tbody .sc1 { position:sticky; left:0;    z-index:10; }
+tbody .sc2 { position:sticky; left:52px; z-index:10; }
+tbody .sc3 { position:sticky; left:96px; z-index:10; border-right:2px solid #d1d5db; }
+table.mis tbody tr:nth-child(odd)  .sc1,
+table.mis tbody tr:nth-child(odd)  .sc2,
+table.mis tbody tr:nth-child(odd)  .sc3 { background:#fff !important; }
+table.mis tbody tr:nth-child(even) .sc1,
+table.mis tbody tr:nth-child(even) .sc2,
+table.mis tbody tr:nth-child(even) .sc3 { background:#f9fafb !important; }
+table.mis tbody tr:hover           .sc1,
+table.mis tbody tr:hover           .sc2,
+table.mis tbody tr:hover           .sc3 { background:#eff6ff !important; }
+
+/* ── Grid view ── */
+.grid-wrap { flex:1; overflow-y:auto; padding:1.2rem 1.4rem; min-height:0; display:none; }
+#view-mis.grid-mode .tbl-wrap  { display:none; }
+#view-mis.grid-mode .grid-wrap { display:block; }
+.country-hdr {
+  font-size:.72rem; font-weight:700; text-transform:uppercase;
+  letter-spacing:1px; color:#94a3b8;
+  padding:.6rem 0 .35rem; border-bottom:1px solid #e5e7eb; margin-bottom:.7rem;
+}
+.country-hdr + .country-hdr, .row + .country-hdr { margin-top:1.2rem; }
+.co-card {
+  background:#fff; border-radius:10px; padding:.9rem 1rem; height:100%;
+  box-shadow:0 1px 4px rgba(0,0,0,.07); border:1px solid #e5e7eb;
+  cursor:pointer; transition:transform .13s, box-shadow .13s, border-color .13s;
+  position:relative;
+}
+.co-card:hover { transform:translateY(-2px); box-shadow:0 5px 14px rgba(0,0,0,.11); border-color:#93c5fd; }
+.co-card .cc-top  { font-size:.66rem; font-weight:700; text-transform:uppercase; letter-spacing:.4px; color:#94a3b8; margin-bottom:.3rem; }
+.co-card .cc-name { font-size:.86rem; font-weight:700; color:#1e293b; line-height:1.3; }
+.co-card .cc-act  { font-size:.7rem; color:#94a3b8; margin-top:.2rem; }
+.co-card .cc-pills{ margin-top:.55rem; display:flex; gap:.3rem; flex-wrap:wrap; }
+.card-del {
+  position:absolute; top:.45rem; right:.45rem;
+  width:24px; height:24px; border:none; border-radius:5px;
+  background:#fee2e2; color:#dc2626; cursor:pointer;
+  display:none; align-items:center; justify-content:center; font-size:.8rem;
+  transition:background .13s;
+}
+.card-del:hover { background:#fecaca; }
+.co-card:hover .card-del { display:flex; }
+
+/* ── Badges / colours ── */
+.cat-badge {
+  display:inline-flex; width:22px; height:22px; align-items:center; justify-content:center;
+  border-radius:50%; font-size:.7rem; font-weight:700; color:#fff;
+}
+.cat-A { background:#16a34a; }
+.cat-B { background:#2563eb; }
+.d-valid   { color:#15803d; font-weight:500; }
+.d-expired { color:#dc2626; font-weight:500; }
+.d-na      { color:#94a3b8; }
+.btn-act { padding:2px 7px; font-size:.75rem; border-radius:5px; line-height:1.4; }
+.co-name { font-weight:600; color:#1e293b; }
+
+/* ── Company detail ── */
+.detail-body { flex:1; overflow-y:auto; padding:1.4rem; min-height:0; }
+.detail-card { background:#fff; border-radius:12px; padding:1.35rem 1.4rem; box-shadow:0 1px 4px rgba(0,0,0,.07); height:100%; }
+.detail-sec-title {
+  font-size:.68rem; font-weight:700; text-transform:uppercase;
+  letter-spacing:.8px; padding:.45rem .8rem;
+  border-radius:6px; margin-bottom:1rem; display:inline-block;
+}
+.dst-base  { background:#e8f0fb; color:var(--navy); }
+.dst-dnb   { background:#dbeafe; color:#1e40af; }
+.dst-mgtm  { background:#fef3c7; color:#92400e; }
+.dst-audit { background:#dcfce7; color:#166534; }
+.df { margin-bottom:.8rem; }
+.df-label { font-size:.67rem; font-weight:600; text-transform:uppercase; letter-spacing:.4px; color:#94a3b8; margin-bottom:.15rem; }
+.df-value { font-size:.86rem; font-weight:600; color:#1e293b; }
+.df-value.empty { color:#cbd5e1; font-weight:400; font-style:italic; }
+
+/* ── Settings ── */
+.settings-card { background:#fff; border-radius:11px; padding:1.2rem 1.4rem; box-shadow:0 1px 4px rgba(0,0,0,.07); margin-bottom:1rem; }
+.settings-card h3 { font-size:.86rem; font-weight:700; color:var(--navy); margin:0 0 .9rem; padding-bottom:.5rem; border-bottom:1px solid #e5e7eb; }
+
+/* ── Modal / form ── */
+.modal-header.navy { background:var(--navy); color:#fff; }
+.modal-header.navy .btn-close { filter:invert(1); }
+.sec-label { font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:#64748b; border-bottom:2px solid #e2e8f0; padding-bottom:3px; margin:1rem 0 .5rem; }
+.sl-dnb   { color:#1d4ed8; border-color:#bfdbfe; }
+.sl-audit { color:#15803d; border-color:#bbf7d0; }
+.sl-mgtm  { color:#b45309; border-color:#fed7aa; }
+.sl-cb    { color:#7c3aed; border-color:#ddd6fe; }
+
+/* Date + NA group */
+.date-group { display:flex; align-items:center; gap:.5rem; }
+.date-group input[type="date"] { flex:1; min-width:0; }
+.na-wrap { display:flex; align-items:center; gap:.3rem; white-space:nowrap; cursor:pointer; }
+.na-wrap .form-check-input { margin:0; cursor:pointer; }
+.na-wrap label { font-size:.75rem; color:#64748b; cursor:pointer; margin:0; }
+
+.toast-box { position:fixed; bottom:1.4rem; right:1.4rem; z-index:9999; min-width:240px; }
+</style>
+</head>
+<body>
+
+<!-- ═══ SIDEBAR ═══ -->
+<nav class="sidebar">
+  <div class="sidebar-brand">
+    <div class="sb-icon"><i class="bi bi-building"></i></div>
+    <div class="sb-title">Corporate Credit</div>
+    <div class="sb-sub">MIS Dashboard</div>
+  </div>
+  <ul class="sidebar-nav" id="sidebar-nav">
+    <li data-view="dashboard" class="active"><i class="bi bi-grid-1x2-fill"></i>Dashboard</li>
+    <li data-view="mis"><i class="bi bi-table"></i>MIS</li>
+    <li data-view="settings"><i class="bi bi-gear-fill"></i>Settings</li>
+  </ul>
+  <div class="sidebar-footer">Corporate Credit MIS</div>
+</nav>
+
+<!-- ═══ MAIN ═══ -->
+<div class="main-wrap">
+
+  <!-- ── DASHBOARD ── -->
+  <div class="view active" id="view-dashboard">
+    <div class="view-header">
+      <div>
+        <h1><i class="bi bi-grid-1x2-fill me-2 opacity-50" style="font-size:.85rem"></i>Dashboard</h1>
+        <div class="vsub" id="date-label"></div>
+      </div>
+    </div>
+    <div class="view-body">
+      <div class="row g-3 mb-4">
+        <div class="col-6 col-lg-3"><div class="stat-card s-total"><div class="sv" id="st-total">0</div><div class="sl">Total Companies</div></div></div>
+        <div class="col-6 col-lg-3"><div class="stat-card s-exp"><div class="sv text-danger" id="st-expired">0</div><div class="sl">Expired Reports</div></div></div>
+        <div class="col-6 col-lg-3"><div class="stat-card s-soon"><div class="sv" style="color:#d97706" id="st-soon">0</div><div class="sl">Expiring in 30 Days</div></div></div>
+        <div class="col-6 col-lg-3"><div class="stat-card s-ok"><div class="sv text-success" id="st-ok">0</div><div class="sl">All Clear</div></div></div>
+      </div>
+      <div class="row g-3">
+        <div class="col-lg-4">
+          <div class="alerts-panel">
+            <div class="ap-head"><i class="bi bi-bell-fill text-warning"></i>D&amp;B Report Alerts</div>
+            <div id="alerts-dnb"></div>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="alerts-panel">
+            <div class="ap-head"><i class="bi bi-bell-fill text-warning"></i>Audit Report Alerts</div>
+            <div id="alerts-audit"></div>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="alerts-panel">
+            <div class="ap-head" style="background:#92400e"><i class="bi bi-calendar-check text-warning"></i>In-House Reports Due</div>
+            <div id="alerts-mgtm"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── MIS ── -->
+  <div class="view" id="view-mis">
+    <div class="mis-toolbar">
+      <div class="d-flex align-items-center gap-2">
+        <span class="small fw-semibold text-muted">Cat:</span>
+        <div class="btn-group btn-group-sm" id="cat-btns">
+          <button class="btn btn-outline-primary active" data-cat="">All</button>
+          <button class="btn btn-outline-success"        data-cat="A">A</button>
+          <button class="btn btn-outline-primary"        data-cat="B">B</button>
+        </div>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <span class="small fw-semibold text-muted">Country:</span>
+        <select class="form-select form-select-sm" id="country-sel" style="width:auto"><option value="">All</option></select>
+      </div>
+      <div class="input-group input-group-sm" style="width:210px">
+        <span class="input-group-text"><i class="bi bi-search"></i></span>
+        <input type="text" class="form-control" id="search-box" placeholder="Search…">
+      </div>
+      <span class="badge bg-secondary" id="count-badge">0 records</span>
+      <div class="ms-auto d-flex align-items-center gap-2">
+        <button class="btn btn-sm btn-success fw-semibold" onclick="exportExcel()"><i class="bi bi-file-earmark-excel me-1"></i>Export All</button>
+        <button class="btn btn-sm btn-primary fw-semibold" onclick="openAdd()"><i class="bi bi-plus-lg me-1"></i>Add Company</button>
+        <div class="vtoggle ms-1">
+          <button id="btn-lv" class="active" title="List view" onclick="setMisView('list')"><i class="bi bi-list-ul"></i></button>
+          <button id="btn-gv" title="Grid view" onclick="setMisView('grid')"><i class="bi bi-grid-fill"></i></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- List view -->
+    <div class="tbl-wrap">
+      <table class="table table-bordered mis">
+        <thead>
+          <tr>
+            <th class="sc1 gh-base" style="width:52px">SR.No.</th>
+            <th class="sc2 gh-base" style="width:44px">Cat</th>
+            <th class="sc3 gh-base" style="min-width:200px">Company Name</th>
+            <th class="gh-base"  style="min-width:140px">Activity</th>
+            <th class="gh-base"  style="width:75px">Country</th>
+            <th class="gh-dnb"   style="width:108px">D&amp;B Rep Validity</th>
+            <th class="gh-dnb"   style="width:85px">D&amp;B Rating</th>
+            <th class="gh-dnb"   style="width:118px">D&amp;B Processed By</th>
+            <th class="gh-audit" style="width:100px">Last Audit</th>
+            <th class="gh-audit" style="width:118px">Audit Processed By</th>
+            <th class="gh-audit" style="width:118px">Audit Prepared By</th>
+            <th class="gh-mgtm"  style="width:88px">Mgtm A/c Q1</th>
+            <th class="gh-mgtm"  style="width:88px">Mgtm A/c Q2</th>
+            <th class="gh-mgtm"  style="width:88px">Mgtm A/c Q3</th>
+            <th class="gh-mgtm"  style="width:88px">Mgtm A/c Q4</th>
+            <th class="gh-cb"    style="width:88px">AECB (Dir)</th>
+            <th class="gh-cb"    style="width:95px">AECB (Com)</th>
+            <th class="gh-cb"    style="width:88px">Cibil (Dir)</th>
+            <th class="gh-base"  style="min-width:155px">Remarks</th>
+            <th class="gh-base"  style="width:80px">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="tbody">
+          <tr><td colspan="20" class="text-center text-muted py-5"><i class="bi bi-hourglass-split me-2"></i>Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Grid view -->
+    <div class="grid-wrap"><div id="grid-content"></div></div>
+  </div>
+
+  <!-- ── COMPANY DETAIL ── -->
+  <div class="view" id="view-company">
+    <div class="view-header">
+      <button class="btn btn-sm btn-outline-secondary" onclick="navTo('mis')"><i class="bi bi-arrow-left me-1"></i>Back</button>
+      <h1 class="ms-1 me-auto" id="detail-title" style="font-size:1rem"></h1>
+      <button class="btn btn-sm btn-outline-primary fw-semibold" id="btn-detail-edit"><i class="bi bi-pencil me-1"></i>Edit</button>
+      <button class="btn btn-sm btn-outline-danger fw-semibold" id="btn-detail-delete"><i class="bi bi-trash me-1"></i>Delete</button>
+      <button class="btn btn-sm btn-success fw-semibold" id="btn-detail-export"><i class="bi bi-file-earmark-excel me-1"></i>Export (this company)</button>
+    </div>
+    <div class="detail-body"><div class="row g-3" id="detail-content"></div></div>
+  </div>
+
+  <!-- ── SETTINGS ── -->
+  <div class="view" id="view-settings">
+    <div class="view-header">
+      <div>
+        <h1><i class="bi bi-gear-fill me-2 opacity-50" style="font-size:.85rem"></i>Settings</h1>
+        <div class="vsub">Manage dropdown lists and preferences</div>
+      </div>
+    </div>
+    <div class="view-body">
+      <div class="row g-3 mb-2">
+        <div class="col-md-6" id="sc-staff"></div>
+        <div class="col-md-6" id="sc-countries"></div>
+        <div class="col-md-6" id="sc-activities"></div>
+        <div class="col-md-6">
+          <div id="sc-ratings"></div>
+          <div id="sc-aecb" class="mt-3"></div>
+        </div>
+      </div>
+      <div class="settings-card">
+        <h3><i class="bi bi-file-earmark-excel me-2"></i>Export</h3>
+        <p class="small text-muted mb-3">Download the full MIS as a formatted Excel file.</p>
+        <button class="btn btn-sm btn-success fw-semibold" onclick="exportExcel()"><i class="bi bi-file-earmark-excel me-1"></i>Export All to Excel</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main-wrap -->
+
+<!-- ═══ Add/Edit Modal ═══ -->
+<div class="modal fade" id="modal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header navy">
+        <h5 class="modal-title" id="modal-title"><i class="bi bi-building me-2"></i>Add Company</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body pb-2">
+        <input type="hidden" id="f-id">
+
+        <div class="sec-label">Company Information</div>
+        <div class="row g-2">
+          <div class="col-md-2">
+            <label class="form-label small fw-semibold mb-1">Category</label>
+            <select class="form-select form-select-sm" id="f-cat">
+              <option value="">—</option>
+              <option value="A">A</option>
+              <option value="B">B</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold mb-1">Company Name <span class="text-danger">*</span></label>
+            <input type="text" class="form-control form-control-sm" id="f-company_name" required>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label small fw-semibold mb-1">Country</label>
+            <select class="form-select form-select-sm" id="f-country"></select>
+          </div>
+          <div class="col-md-2">
+            <!-- spacer / future use -->
+          </div>
+          <div class="col-12">
+            <label class="form-label small fw-semibold mb-1">Activity</label>
+            <select class="form-select form-select-sm" id="f-activity"></select>
+          </div>
+        </div>
+
+        <div class="sec-label sl-dnb">D&amp;B</div>
+        <div class="row g-2">
+          <div class="col-md-4">
+            <label class="form-label small fw-semibold mb-1">Rep Validity</label>
+            <div class="date-group">
+              <input type="date" class="form-control form-control-sm" id="f-dnb_rep_validity">
+              <div class="na-wrap"><input type="checkbox" class="form-check-input" id="f-dnb_rep_validity_na" onchange="toggleNA('dnb_rep_validity')"><label for="f-dnb_rep_validity_na">N/A</label></div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label small fw-semibold mb-1">Rating</label>
+            <select class="form-select form-select-sm" id="f-dnb_rating"></select>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label small fw-semibold mb-1">Processed By</label>
+            <select class="form-select form-select-sm" id="f-dnb_processed_by"></select>
+          </div>
+        </div>
+
+        <div class="sec-label sl-audit">Audit Report</div>
+        <div class="row g-2">
+          <div class="col-md-4">
+            <label class="form-label small fw-semibold mb-1">Date</label>
+            <div class="date-group">
+              <input type="date" class="form-control form-control-sm" id="f-audit_rep">
+              <div class="na-wrap"><input type="checkbox" class="form-check-input" id="f-audit_rep_na" onchange="toggleNA('audit_rep')"><label for="f-audit_rep_na">N/A</label></div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label small fw-semibold mb-1">Processed By</label>
+            <select class="form-select form-select-sm" id="f-audit_processed_by"></select>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label small fw-semibold mb-1">Prepared By</label>
+            <select class="form-select form-select-sm" id="f-audit_prepared_by"></select>
+          </div>
+        </div>
+
+        <div class="sec-label sl-mgtm">In-house Reports (Quarterly)</div>
+        <div class="row g-2">
+          <div class="col-md-3">
+            <label class="form-label small fw-semibold mb-1">Q1</label>
+            <div class="date-group">
+              <input type="date" class="form-control form-control-sm" id="f-mgtm_ac_q1">
+              <div class="na-wrap"><input type="checkbox" class="form-check-input" id="f-mgtm_ac_q1_na" onchange="toggleNA('mgtm_ac_q1')"><label for="f-mgtm_ac_q1_na">N/A</label></div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label small fw-semibold mb-1">Q2</label>
+            <div class="date-group">
+              <input type="date" class="form-control form-control-sm" id="f-mgtm_ac_q2">
+              <div class="na-wrap"><input type="checkbox" class="form-check-input" id="f-mgtm_ac_q2_na" onchange="toggleNA('mgtm_ac_q2')"><label for="f-mgtm_ac_q2_na">N/A</label></div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label small fw-semibold mb-1">Q3</label>
+            <div class="date-group">
+              <input type="date" class="form-control form-control-sm" id="f-mgtm_ac_q3">
+              <div class="na-wrap"><input type="checkbox" class="form-check-input" id="f-mgtm_ac_q3_na" onchange="toggleNA('mgtm_ac_q3')"><label for="f-mgtm_ac_q3_na">N/A</label></div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label small fw-semibold mb-1">Q4</label>
+            <div class="date-group">
+              <input type="date" class="form-control form-control-sm" id="f-mgtm_ac_q4">
+              <div class="na-wrap"><input type="checkbox" class="form-check-input" id="f-mgtm_ac_q4_na" onchange="toggleNA('mgtm_ac_q4')"><label for="f-mgtm_ac_q4_na">N/A</label></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sec-label sl-cb">Credit Bureau</div>
+        <div class="row g-2">
+          <div class="col-md-4">
+            <label class="form-label small fw-semibold mb-1">AECB (Director)</label>
+            <select class="form-select form-select-sm" id="f-aecb_dir"></select>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label small fw-semibold mb-1">AECB (Com)</label>
+            <div class="date-group">
+              <input type="date" class="form-control form-control-sm" id="f-aecb_com">
+              <div class="na-wrap"><input type="checkbox" class="form-check-input" id="f-aecb_com_na" onchange="toggleNA('aecb_com')"><label for="f-aecb_com_na">N/A</label></div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label small fw-semibold mb-1">Cibil (Director)</label>
+            <input type="text" class="form-control form-control-sm" id="f-cibil_dir">
+          </div>
+        </div>
+
+        <div class="sec-label">Remarks</div>
+        <textarea class="form-control form-control-sm" id="f-remarks" rows="3" placeholder="Any notes…"></textarea>
+      </div>
+      <div class="modal-footer py-2">
+        <button class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-sm btn-primary px-4 fw-semibold" onclick="save()"><i class="bi bi-save me-1"></i>Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete confirm -->
+<div class="modal fade" id="del-modal" tabindex="-1">
+  <div class="modal-dialog modal-sm modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-body text-center py-4">
+        <i class="bi bi-exclamation-triangle-fill text-danger fs-2 d-block mb-2"></i>
+        <p class="mb-1 fw-semibold">Delete this company?</p>
+        <p class="text-muted small" id="del-name"></p>
+      </div>
+      <div class="modal-footer justify-content-center border-0 pt-0">
+        <button class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-sm btn-danger px-4" id="del-confirm">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast-box">
+  <div id="toast" class="toast align-items-center text-white border-0" role="alert">
+    <div class="d-flex">
+      <div class="toast-body" id="toast-msg"></div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// ── List defaults ─────────────────────────────────────────────────────────────
+const LIST_DEFAULTS = {
+  staff:      [],
+  countries:  ['UAE','HK','India','UK','USA','Singapore'],
+  activities: ['GENERAL TRADING','MANUFACTURING','INFORMATION TECHNOLOGY','EVENT MANAGEMENT','TRADING & RECYCLING'],
+  ratings:    ['3A3','2A3','3A2','2A2','EE3','NA'],
+  aecb:       ['Y','N'],
+};
+
+const LIST_META = {
+  staff:      { label:'Staff / Responsible Persons', icon:'bi-people',       hint:'Used in all "Processed By" and "Prepared By" dropdowns.' },
+  countries:  { label:'Countries',                   icon:'bi-globe',        hint:'Options for the Country field.' },
+  activities: { label:'Activities',                  icon:'bi-briefcase',    hint:'Options for the Activity field.' },
+  ratings:    { label:'D&B Ratings',                 icon:'bi-bar-chart',    hint:'Options for the D&B Rating field.' },
+  aecb:       { label:'AECB Dir Options',            icon:'bi-toggle-on',    hint:'Options for the AECB (Director) field.' },
+};
+
+function getList(key) {
+  const s = localStorage.getItem('mis-' + key);
+  return s !== null ? JSON.parse(s) : [...LIST_DEFAULTS[key]];
+}
+function setList(key, arr) { localStorage.setItem('mis-' + key, JSON.stringify(arr)); }
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let ALL = [];
+let activeFilters = { cat:'', country:'', q:'' };
+let misView = 'list';
+let currentCompanyId = null;
+let pendingDeleteId  = null;
+let pendingDeleteCb  = null;
+
+// ── Bootstrap helpers ─────────────────────────────────────────────────────────
+const bsModal    = () => bootstrap.Modal.getOrCreateInstance(document.getElementById('modal'));
+const bsDelModal = () => bootstrap.Modal.getOrCreateInstance(document.getElementById('del-modal'));
+const bsToast    = () => bootstrap.Toast.getOrCreateInstance(document.getElementById('toast'), { delay:2500 });
+
+// ── Date field helpers ────────────────────────────────────────────────────────
+const DATE_FIELDS = ['dnb_rep_validity','audit_rep','mgtm_ac_q1','mgtm_ac_q2','mgtm_ac_q3','mgtm_ac_q4','aecb_com'];
+
+// DD-MM-YYYY → YYYY-MM-DD (for date input)
+function toInputDate(val) {
+  if (!val) return '';
+  const m = val.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})$/);
+  if (m) return `${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(val)) return val;
+  return '';
+}
+// YYYY-MM-DD → DD-MM-YYYY
+function fromInputDate(val) {
+  if (!val) return null;
+  const [y,m,d] = val.split('-');
+  return `${d}-${m}-${y}`;
+}
+
+function toggleNA(field) {
+  const cb  = document.getElementById(`f-${field}_na`);
+  const inp = document.getElementById(`f-${field}`);
+  inp.disabled = cb.checked;
+  if (cb.checked) inp.value = '';
+}
+
+function loadDateField(field, val) {
+  const cb  = document.getElementById(`f-${field}_na`);
+  const inp = document.getElementById(`f-${field}`);
+  if (val && val.toUpperCase() === 'NA') {
+    cb.checked = true; inp.disabled = true; inp.value = '';
+  } else {
+    cb.checked = false; inp.disabled = false;
+    inp.value = val ? toInputDate(val) : '';
+  }
+}
+function readDateField(field) {
+  const cb = document.getElementById(`f-${field}_na`);
+  if (cb.checked) return 'NA';
+  const v = document.getElementById(`f-${field}`).value;
+  return v ? fromInputDate(v) : null;
+}
+
+// ── Select helpers ────────────────────────────────────────────────────────────
+function populateSelect(id, items, allowEmpty) {
+  const sel = document.getElementById(id);
+  if (!sel) return;
+  const cur = sel.value;
+  sel.innerHTML = allowEmpty ? '<option value="">—</option>' : '';
+  items.forEach(item => {
+    const o = document.createElement('option');
+    o.value = item; o.textContent = item;
+    sel.appendChild(o);
+  });
+  if (cur) sel.value = cur;
+}
+
+function ensureOption(selEl, val) {
+  if (!val) return;
+  if (![...selEl.options].some(o => o.value === val)) {
+    const o = document.createElement('option');
+    o.value = val; o.textContent = val;
+    selEl.appendChild(o);
+  }
+}
+
+function refreshSelects() {
+  populateSelect('f-country',            getList('countries'), true);
+  populateSelect('f-activity',           getList('activities'), true);
+  populateSelect('f-dnb_rating',         getList('ratings'), true);
+  populateSelect('f-aecb_dir',           getList('aecb'), true);
+  populateSelect('f-dnb_processed_by',   getList('staff'), true);
+  populateSelect('f-audit_processed_by', getList('staff'), true);
+  populateSelect('f-audit_prepared_by',  getList('staff'), true);
+}
+
+// ── Settings list editors ─────────────────────────────────────────────────────
+function renderListEditor(key) {
+  const meta  = LIST_META[key];
+  const items = getList(key);
+  const container = document.getElementById('sc-' + key);
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="settings-card h-100">
+      <h3><i class="bi ${meta.icon} me-2"></i>${meta.label}</h3>
+      <p class="small text-muted mb-2">${meta.hint}</p>
+      <div class="d-flex gap-2 mb-2">
+        <input type="text" class="form-control form-control-sm" id="inp-${key}"
+               placeholder="Add…" style="max-width:220px"
+               onkeydown="if(event.key==='Enter')addToList('${key}')">
+        <button class="btn btn-sm btn-primary" onclick="addToList('${key}')">
+          <i class="bi bi-plus-lg"></i>
+        </button>
+      </div>
+      <div id="list-${key}" class="d-flex flex-wrap gap-2 mt-1">
+        ${items.map((item,i) => listBadge(key, item, i)).join('')}
+      </div>
+    </div>`;
+}
+
+function listBadge(key, item, i) {
+  return `<span class="badge bg-light text-dark border d-flex align-items-center gap-1" style="font-size:.77rem;padding:.35rem .6rem">
+    ${esc(item)}
+    <button type="button" class="btn-close" style="font-size:.55rem" title="Remove"
+            onclick="removeFromList('${key}',${i})"></button>
+  </span>`;
+}
+
+function addToList(key) {
+  const inp = document.getElementById(`inp-${key}`);
+  const val = inp.value.trim();
+  if (!val) return;
+  const list = getList(key);
+  if (!list.includes(val)) { list.push(val); setList(key, list); }
+  inp.value = '';
+  renderListEditor(key);
+  refreshSelects();
+}
+
+function removeFromList(key, i) {
+  const list = getList(key);
+  list.splice(i, 1);
+  setList(key, list);
+  renderListEditor(key);
+  refreshSelects();
+}
+
+function renderAllEditors() {
+  Object.keys(LIST_META).forEach(renderListEditor);
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+document.getElementById('date-label').textContent =
+  new Date().toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
+
+document.getElementById('sidebar-nav').addEventListener('click', e => {
+  const li = e.target.closest('li[data-view]');
+  if (li) navTo(li.dataset.view);
+});
+
+function navTo(view) {
+  const sideView = view === 'company' ? 'mis' : view;
+  document.querySelectorAll('#sidebar-nav li').forEach(li =>
+    li.classList.toggle('active', li.dataset.view === sideView));
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  const el = document.getElementById('view-' + view);
+  if (el) el.classList.add('active');
+}
+
+// ── Data ──────────────────────────────────────────────────────────────────────
+async function load() {
+  const res = await fetch('/api/companies');
+  ALL = await res.json();
+  rebuildCountryFilter();
+  render();
+  renderDashboard();
+  if (currentCompanyId) {
+    const c = ALL.find(x => x.id === currentCompanyId);
+    if (c) renderDetail(c);
+  }
+}
+
+// ── MIS view toggle ───────────────────────────────────────────────────────────
+function setMisView(v) {
+  misView = v;
+  document.getElementById('btn-lv').classList.toggle('active', v === 'list');
+  document.getElementById('btn-gv').classList.toggle('active', v === 'grid');
+  document.getElementById('view-mis').classList.toggle('grid-mode', v === 'grid');
+  render();
+}
+
+// ── Render ────────────────────────────────────────────────────────────────────
+function render() {
+  const rows = applyFilters(ALL);
+  document.getElementById('count-badge').textContent =
+    rows.length + ' record' + (rows.length !== 1 ? 's' : '');
+  if (misView === 'list') renderList(rows);
+  else renderGrid(rows);
+}
+
+function applyFilters(rows) {
+  if (activeFilters.cat)     rows = rows.filter(c => c.cat === activeFilters.cat);
+  if (activeFilters.country) rows = rows.filter(c => c.country === activeFilters.country);
+  if (activeFilters.q) {
+    const q = activeFilters.q.toLowerCase();
+    rows = rows.filter(c =>
+      (c.company_name||'').toLowerCase().includes(q) ||
+      (c.activity    ||'').toLowerCase().includes(q) ||
+      (c.remarks     ||'').toLowerCase().includes(q) ||
+      (c.country     ||'').toLowerCase().includes(q)
+    );
+  }
+  return rows;
+}
+
+function renderList(rows) {
+  const tbody = document.getElementById('tbody');
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="20" class="text-center text-muted py-5">
+      <i class="bi bi-inbox me-2"></i>No records match.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = rows.map(c => `
+  <tr onclick="openDetail(${c.id})">
+    <td class="sc1 text-center text-muted small">${c.sr_no}</td>
+    <td class="sc2 text-center">${catBadge(c.cat)}</td>
+    <td class="sc3 co-name">${esc(c.company_name)}</td>
+    <td class="small">${esc(c.activity)}</td>
+    <td class="text-center small fw-semibold">${esc(c.country)}</td>
+    <td class="text-center">${fmtDate(c.dnb_rep_validity)}</td>
+    <td class="text-center fw-semibold">${c.dnb_rating ? esc(c.dnb_rating) : dash()}</td>
+    <td class="text-center small">${c.dnb_processed_by ? esc(c.dnb_processed_by) : dash()}</td>
+    <td class="text-center">${fmtDate(c.audit_rep)}</td>
+    <td class="text-center small">${c.audit_processed_by ? esc(c.audit_processed_by) : dash()}</td>
+    <td class="text-center small">${c.audit_prepared_by ? esc(c.audit_prepared_by) : dash()}</td>
+    <td class="text-center">${fmtDate(c.mgtm_ac_q1)}</td>
+    <td class="text-center">${fmtDate(c.mgtm_ac_q2)}</td>
+    <td class="text-center">${fmtDate(c.mgtm_ac_q3)}</td>
+    <td class="text-center">${fmtDate(c.mgtm_ac_q4)}</td>
+    <td class="text-center">${fmtAecbDir(c.aecb_dir)}</td>
+    <td class="text-center">${fmtDate(c.aecb_com)}</td>
+    <td class="text-center small">${c.cibil_dir ? esc(c.cibil_dir) : dash()}</td>
+    <td class="small text-muted">${esc(c.remarks)}</td>
+    <td class="text-center" onclick="event.stopPropagation()">
+      <button class="btn btn-outline-primary btn-act me-1" onclick="openEdit(${c.id})" title="Edit"><i class="bi bi-pencil-fill"></i></button>
+      <button class="btn btn-outline-danger btn-act" onclick="confirmDelete(${c.id})" title="Delete"><i class="bi bi-trash-fill"></i></button>
+    </td>
+  </tr>`).join('');
+}
+
+function renderGrid(rows) {
+  const el = document.getElementById('grid-content');
+  if (!rows.length) {
+    el.innerHTML = `<div class="text-center text-muted py-5"><i class="bi bi-inbox fs-1 d-block mb-3"></i>No records match.</div>`;
+    return;
+  }
+  const groups = {};
+  rows.forEach(c => {
+    const ct = (c.country || 'UAE').trim();
+    (groups[ct] = groups[ct] || []).push(c);
+  });
+  const order = ['UAE', ...Object.keys(groups).filter(k => k !== 'UAE').sort()];
+  el.innerHTML = order.filter(ct => groups[ct]).map(ct => `
+    <div class="country-hdr">${esc(ct)} <span class="fw-normal">(${groups[ct].length})</span></div>
+    <div class="row row-cols-2 row-cols-md-3 row-cols-xl-4 g-3 mb-1">
+      ${groups[ct].map(c => `
+      <div class="col">
+        <div class="co-card" onclick="openDetail(${c.id})">
+          <button class="card-del" onclick="event.stopPropagation();confirmDelete(${c.id})" title="Delete">
+            <i class="bi bi-trash-fill"></i>
+          </button>
+          <div class="cc-top">${c.cat ? `<span class="cat-badge cat-${esc(c.cat)} me-1">${esc(c.cat)}</span>` : ''}${esc(c.cat||'—')}</div>
+          <div class="cc-name">${esc(c.company_name)}</div>
+          ${c.activity ? `<div class="cc-act">${esc(c.activity)}</div>` : ''}
+          <div class="cc-pills">${statusPill(c.dnb_rep_validity,'D&B')}${statusPill(c.audit_rep,'Audit')}</div>
+        </div>
+      </div>`).join('')}
+    </div>`).join('');
+}
+
+function statusPill(val, label) {
+  const d = parseDate(val);
+  if (!d) return '';
+  const diff = (d - new Date()) / 864e5;
+  if (diff < 0)  return `<span class="badge bg-danger" style="font-size:.59rem">${label} Expired</span>`;
+  if (diff < 30) return `<span class="badge bg-warning text-dark" style="font-size:.59rem">${label} Soon</span>`;
+  return `<span class="badge bg-success" style="font-size:.59rem">${label} OK</span>`;
+}
+
+// ── Dashboard ─────────────────────────────────────────────────────────────────
+function renderDashboard() {
+  const now = new Date();
+  let expired = 0, soon = 0, ok = 0;
+  const dnbAlerts = [], auditAlerts = [], mgtmAlerts = [];
+
+  ALL.forEach(c => {
+    // D&B + Audit expiry checks
+    const expiryChecks = [
+      { d: parseDate(c.dnb_rep_validity),  bucket: dnbAlerts,   person: c.dnb_processed_by,   dateStr: c.dnb_rep_validity },
+      { d: parseDate(c.audit_rep),         bucket: auditAlerts, person: c.audit_processed_by, dateStr: c.audit_rep },
+    ];
+    let hasIssue = false, hasOk = false;
+    expiryChecks.forEach(({ d, bucket, person, dateStr }) => {
+      if (!d) return;
+      const diff = (d - now) / 864e5;
+      if (diff < 0)       { bucket.push({ co: c.company_name, date: dateStr, type:'expired', person }); hasIssue = true; }
+      else if (diff < 30) { bucket.push({ co: c.company_name, date: dateStr, type:'soon',    person }); hasIssue = true; }
+      else hasOk = true;
+    });
+    if (hasIssue) {
+      if (expiryChecks.some(({ d }) => d && (d - now) / 864e5 < 0)) expired++; else soon++;
+    } else if (hasOk) ok++;
+
+    // In-house quarterly due-soon checks (only upcoming, not past)
+    const quarters = [
+      { field: 'mgtm_ac_q1', label: 'Q1', val: c.mgtm_ac_q1 },
+      { field: 'mgtm_ac_q2', label: 'Q2', val: c.mgtm_ac_q2 },
+      { field: 'mgtm_ac_q3', label: 'Q3', val: c.mgtm_ac_q3 },
+      { field: 'mgtm_ac_q4', label: 'Q4', val: c.mgtm_ac_q4 },
+    ];
+    quarters.forEach(({ label, val }) => {
+      const d = parseDate(val);
+      if (!d) return;
+      const diff = (d - now) / 864e5;
+      if (diff >= 0 && diff <= 30) {
+        mgtmAlerts.push({ co: c.company_name, label, date: val, diff: Math.ceil(diff) });
+      }
+    });
+  });
+
+  document.getElementById('st-total').textContent   = ALL.length;
+  document.getElementById('st-expired').textContent = expired;
+  document.getElementById('st-soon').textContent    = soon;
+  document.getElementById('st-ok').textContent      = ok;
+
+  const expiryAlertHTML = items => !items.length
+    ? `<div class="alert-empty"><i class="bi bi-check-circle text-success me-1"></i>No alerts — all clear</div>`
+    : items.map(a => `
+        <div class="alert-item">
+          <div class="alert-dot ${a.type}"></div>
+          <div>
+            <div class="ai-co">${esc(a.co)}</div>
+            <div class="ai-det">${a.type==='expired'?'Expired':'Expiring'}: <strong>${esc(a.date)}</strong>${a.person?` · Responsible: <strong>${esc(a.person)}</strong>`:''}</div>
+          </div>
+        </div>`).join('');
+
+  const mgtmAlertHTML = items => {
+    // Sort by days remaining ascending
+    items.sort((a, b) => a.diff - b.diff);
+    return !items.length
+      ? `<div class="alert-empty"><i class="bi bi-check-circle text-success me-1"></i>No reports due in the next 30 days</div>`
+      : items.map(a => `
+          <div class="alert-item">
+            <div class="alert-dot soon"></div>
+            <div>
+              <div class="ai-co">${esc(a.co)}</div>
+              <div class="ai-det">${esc(a.label)} due: <strong>${esc(a.date)}</strong> · <strong>${a.diff === 0 ? 'today' : `in ${a.diff} day${a.diff !== 1 ? 's' : ''}`}</strong></div>
+            </div>
+          </div>`).join('');
+  };
+
+  document.getElementById('alerts-dnb').innerHTML   = expiryAlertHTML(dnbAlerts);
+  document.getElementById('alerts-audit').innerHTML = expiryAlertHTML(auditAlerts);
+  document.getElementById('alerts-mgtm').innerHTML  = mgtmAlertHTML(mgtmAlerts);
+}
+
+// ── Company detail ────────────────────────────────────────────────────────────
+function openDetail(id) {
+  const c = ALL.find(x => x.id === id);
+  if (!c) return;
+  currentCompanyId = id;
+  renderDetail(c);
+  navTo('company');
+}
+
+function renderDetail(c) {
+  document.getElementById('detail-title').textContent  = c.company_name;
+  document.getElementById('btn-detail-edit').onclick   = () => openEdit(c.id);
+  document.getElementById('btn-detail-export').onclick = () => { window.location.href = `/export/${c.id}`; };
+  document.getElementById('btn-detail-delete').onclick = () => confirmDelete(c.id, () => navTo('mis'));
+
+  const sections = [
+    { title:'Company Details', cls:'dst-base',
+      fields:[{l:'Category',v:c.cat},{l:'Activity',v:c.activity},{l:'Country',v:c.country},{l:'Remarks',v:c.remarks}] },
+    { title:'D&B Details', cls:'dst-dnb',
+      fields:[{l:'D&B Expiry',v:c.dnb_rep_validity},{l:'D&B Rating',v:c.dnb_rating},{l:'Processed By',v:c.dnb_processed_by}] },
+    { title:'In-House Details', cls:'dst-mgtm',
+      fields:[{l:'1st Quarter',v:c.mgtm_ac_q1},{l:'2nd Quarter',v:c.mgtm_ac_q2},{l:'3rd Quarter',v:c.mgtm_ac_q3},{l:'4th Quarter',v:c.mgtm_ac_q4}] },
+    { title:'Audit Details', cls:'dst-audit',
+      fields:[{l:'Report Expiry',v:c.audit_rep},{l:'Prepared By',v:c.audit_prepared_by},{l:'Processed By',v:c.audit_processed_by}] },
+  ];
+  document.getElementById('detail-content').innerHTML = sections.map(s => `
+    <div class="col-md-6 col-xl-3">
+      <div class="detail-card">
+        <div class="detail-sec-title ${s.cls}">${s.title}</div>
+        ${s.fields.map(f => `
+          <div class="df">
+            <div class="df-label">${f.l}</div>
+            <div class="df-value ${!f.v?'empty':''}">${f.v?esc(f.v):'—'}</div>
+          </div>`).join('')}
+      </div>
+    </div>`).join('');
+}
+
+// ── Filters ───────────────────────────────────────────────────────────────────
+document.getElementById('cat-btns').addEventListener('click', e => {
+  const btn = e.target.closest('button[data-cat]');
+  if (!btn) return;
+  document.querySelectorAll('#cat-btns button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  activeFilters.cat = btn.dataset.cat;
+  render();
+});
+document.getElementById('country-sel').addEventListener('change', e => { activeFilters.country = e.target.value; render(); });
+let searchTimer;
+document.getElementById('search-box').addEventListener('input', e => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => { activeFilters.q = e.target.value; render(); }, 200);
+});
+
+function rebuildCountryFilter() {
+  const countries = [...new Set(ALL.map(c => c.country).filter(Boolean))].sort();
+  const sel = document.getElementById('country-sel');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">All</option>';
+  countries.forEach(ct => {
+    const o = document.createElement('option');
+    o.value = ct; o.textContent = ct;
+    if (ct === cur) o.selected = true;
+    sel.appendChild(o);
+  });
+}
+
+// ── Add / Edit ────────────────────────────────────────────────────────────────
+const FIELDS = [
+  'cat','company_name','activity','country',
+  'dnb_rep_validity','dnb_rating','dnb_processed_by',
+  'audit_rep','audit_processed_by','audit_prepared_by',
+  'mgtm_ac_q1','mgtm_ac_q2','mgtm_ac_q3','mgtm_ac_q4',
+  'aecb_dir','aecb_com','cibil_dir','remarks',
+];
+
+function openAdd() {
+  document.getElementById('modal-title').innerHTML = '<i class="bi bi-plus-circle me-2"></i>Add Company';
+  document.getElementById('f-id').value = '';
+  refreshSelects();
+  FIELDS.forEach(f => {
+    if (DATE_FIELDS.includes(f)) { loadDateField(f, ''); return; }
+    const el = document.getElementById('f-' + f);
+    if (!el) return;
+    el.value = f === 'country' ? (getList('countries')[0] || '') : f === 'aecb_dir' ? (getList('aecb')[1] || '') : '';
+  });
+  bsModal().show();
+}
+
+function openEdit(id) {
+  const c = ALL.find(x => x.id === id);
+  if (!c) return;
+  document.getElementById('modal-title').innerHTML = '<i class="bi bi-pencil me-2"></i>Edit Company';
+  document.getElementById('f-id').value = id;
+  refreshSelects();
+  FIELDS.forEach(f => {
+    if (DATE_FIELDS.includes(f)) { loadDateField(f, c[f] || ''); return; }
+    const el = document.getElementById('f-' + f);
+    if (!el) return;
+    const val = c[f] || '';
+    if (el.tagName === 'SELECT' && val) ensureOption(el, val);
+    el.value = val;
+  });
+  bsModal().show();
+}
+
+async function save() {
+  const nameEl = document.getElementById('f-company_name');
+  if (!nameEl.value.trim()) { nameEl.classList.add('is-invalid'); return; }
+  nameEl.classList.remove('is-invalid');
+
+  const id   = document.getElementById('f-id').value;
+  const body = {};
+  FIELDS.forEach(f => {
+    body[f] = DATE_FIELDS.includes(f)
+      ? readDateField(f)
+      : (document.getElementById('f-' + f)?.value.trim() || null);
+  });
+
+  const res = await fetch(id ? `/api/companies/${id}` : '/api/companies', {
+    method: id ? 'PUT' : 'POST',
+    headers: { 'Content-Type':'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (res.ok) {
+    bsModal().hide();
+    toast(id ? 'Company updated.' : 'Company added.', 'bg-success');
+    load();
+  } else {
+    toast('Error saving. Please try again.', 'bg-danger');
+  }
+}
+
+// ── Delete ────────────────────────────────────────────────────────────────────
+function confirmDelete(id, cb) {
+  const c = ALL.find(x => x.id === id);
+  pendingDeleteId = id;
+  pendingDeleteCb = cb || null;
+  document.getElementById('del-name').textContent = c?.company_name || '';
+  bsDelModal().show();
+}
+
+document.getElementById('del-confirm').addEventListener('click', async () => {
+  if (!pendingDeleteId) return;
+  const res = await fetch(`/api/companies/${pendingDeleteId}`, { method:'DELETE' });
+  bsDelModal().hide();
+  if (res.ok) {
+    toast('Company deleted.', 'bg-danger');
+    if (pendingDeleteCb) pendingDeleteCb();
+    load();
+  }
+  pendingDeleteId = null; pendingDeleteCb = null;
+});
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function exportExcel() { window.location.href = '/export'; }
+
+function parseDate(val) {
+  if (!val) return null;
+  const v = val.trim();
+  if (v.toUpperCase() === 'NA') return null;
+  const m = v.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})$/);
+  if (m) { const d = new Date(+m[3], +m[2]-1, +m[1]); return isNaN(d)?null:d; }
+  const d = new Date(v);
+  return isNaN(d) ? null : d;
+}
+
+function esc(s) {
+  if (!s) return '';
+  const d = document.createElement('div');
+  d.textContent = s; return d.innerHTML;
+}
+function dash() { return '<span class="text-muted">—</span>'; }
+function catBadge(cat) {
+  if (!cat) return '';
+  return `<span class="cat-badge cat-${cat}">${cat}</span>`;
+}
+function fmtDate(val) {
+  if (!val) return dash();
+  const v = val.trim().toUpperCase();
+  if (v==='NA'||v==='N/A') return `<span class="d-na small">NA</span>`;
+  const d = parseDate(val);
+  if (d) { const cls = d < new Date() ? 'd-expired' : 'd-valid'; return `<span class="${cls} small">${esc(val)}</span>`; }
+  return `<span class="small">${esc(val)}</span>`;
+}
+function fmtAecbDir(val) {
+  if (!val) return dash();
+  const v = val.trim().toUpperCase();
+  if (v==='Y') return `<span class="badge bg-success">Y</span>`;
+  if (v==='N') return `<span class="badge bg-secondary">N</span>`;
+  return fmtDate(val);
+}
+function toast(msg, bgClass='bg-success') {
+  const el = document.getElementById('toast');
+  el.className = `toast align-items-center text-white border-0 ${bgClass}`;
+  document.getElementById('toast-msg').textContent = msg;
+  bsToast().show();
+}
+
+document.getElementById('modal').addEventListener('hidden.bs.modal', () => {
+  document.getElementById('f-company_name').classList.remove('is-invalid');
+});
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
+renderAllEditors();
+refreshSelects();
+load();
+</script>
+</body>
+</html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sign In — MIS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:#eef2f7;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.card{background:#fff;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,.10);width:100%;max-width:400px;padding:40px 36px}
+.brand{text-align:center;margin-bottom:32px}
+.brand-icon{width:52px;height:52px;background:#1e3a8a;border-radius:13px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:22px;font-weight:800;color:#fff;letter-spacing:-.5px}
+.brand h1{font-size:1.35rem;font-weight:700;color:#0f172a}
+.brand p{font-size:.8rem;color:#64748b;margin-top:3px}
+.form-group{margin-bottom:18px}
+label{display:block;font-size:.76rem;font-weight:600;color:#374151;margin-bottom:6px}
+input{width:100%;padding:10px 13px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:.88rem;font-family:inherit;color:#0f172a;outline:none;transition:border-color .15s}
+input:focus{border-color:#1e3a8a}
+.btn{width:100%;padding:11px;background:#1e3a8a;color:#fff;border:none;border-radius:8px;font-size:.9rem;font-weight:600;font-family:inherit;cursor:pointer;transition:background .15s;margin-top:4px}
+.btn:hover{background:#1e40af}
+.btn:disabled{opacity:.6;cursor:not-allowed}
+.error{background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;border-radius:7px;padding:9px 12px;font-size:.78rem;margin-bottom:16px;display:none}
+.links{text-align:center;margin-top:20px;font-size:.78rem;color:#64748b}
+.links a{color:#1e3a8a;font-weight:600;text-decoration:none}
+.links a:hover{text-decoration:underline}
+@media(max-width:440px){.card{padding:28px 20px;border-radius:10px}.brand h1{font-size:1.15rem}}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="brand">
+    <div class="brand-icon">MIS</div>
+    <h1>Welcome back</h1>
+    <p>Sign in to your account</p>
+  </div>
+  <div class="error" id="err"></div>
+  <div class="form-group">
+    <label>Email address</label>
+    <input type="email" id="email" placeholder="you@company.com" autocomplete="email">
+  </div>
+  <div class="form-group">
+    <label>Password</label>
+    <input type="password" id="password" placeholder="••••••••" autocomplete="current-password">
+  </div>
+  <button class="btn" id="btn" onclick="doLogin()">Sign In</button>
+  <div class="links">
+    <a href="/forgot-password">Forgot password?</a>
+    &nbsp;·&nbsp;
+    <a href="/register">Create account</a>
+  </div>
+</div>
+<script>
+document.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+async function doLogin() {
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  const err = document.getElementById('err');
+  const btn = document.getElementById('btn');
+  err.style.display = 'none';
+  if (!email || !password) { err.textContent = 'Please enter your email and password.'; err.style.display='block'; return; }
+  btn.disabled = true; btn.textContent = 'Signing in…';
+  try {
+    const res = await fetch('/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({email, password}) });
+    const data = await res.json();
+    if (data.ok) { window.location.href = '/'; }
+    else { err.textContent = data.error || 'Login failed.'; err.style.display='block'; }
+  } catch(e) { err.textContent = 'Network error. Please try again.'; err.style.display='block'; }
+  btn.disabled = false; btn.textContent = 'Sign In';
+}
+</script>
+</body>
+</html>

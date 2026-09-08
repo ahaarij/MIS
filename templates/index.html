@@ -1,0 +1,2473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MIS — Corporate Credit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+<style>
+/* ── Token layer ──────────────────────────────────────────────────────────── */
+:root {
+  --sidebar-w: 212px;
+
+  /* Surfaces */
+  --bg:        #F1F4F9;
+  --surface:   #FFFFFF;
+  --surface-2: #F8FAFC;
+  --border:    #E2E8F0;
+  --border-2:  #CBD5E1;
+
+  /* Sidebar */
+  --sb:        #0F1923;
+  --sb-border: rgba(255,255,255,.07);
+  --sb-text:   rgba(255,255,255,.5);
+  --sb-hover:  rgba(255,255,255,.08);
+  --sb-active: rgba(255,255,255,.13);
+
+  /* Brand accent — used only for interactive focus/active states, primary CTAs */
+  --accent:     #1D4ED8;
+  --accent-lt:  #EEF2FF;
+  --accent-mid: #BFDBFE;
+
+  /* Text */
+  --t1: #0F172A;
+  --t2: #475569;
+  --t3: #94A3B8;
+
+  /* Semantic — not the accent */
+  --red:    #DC2626;
+  --red-lt: #FEF2F2;
+  --amber:  #B45309;
+  --amb-lt: #FFFBEB;
+  --green:  #15803D;
+  --grn-lt: #F0FDF4;
+
+  /* Table header bands */
+  --th-base:  #1E293B;
+  --th-dnb:   #1E3A5F;
+  --th-audit: #14532D;
+  --th-mgtm:  #431407;
+  --th-cb:    #1E1B4B;
+}
+
+/* ── Base ────────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  height: 100%; margin: 0;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: 14px;
+  overflow: hidden;
+  color: var(--t1);
+  -webkit-font-smoothing: antialiased;
+}
+body { display: flex; background: var(--bg); }
+
+/* ── Sidebar ────────────────────────────────────────────────────────────── */
+.sidebar {
+  width: var(--sidebar-w);
+  flex-shrink: 0;
+  background: var(--sb);
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow-y: auto;
+  z-index: 100;
+}
+
+.sidebar-brand {
+  padding: 20px 16px 16px;
+  border-bottom: 1px solid var(--sb-border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.sb-icon {
+  width: 34px; height: 34px;
+  background: var(--accent);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.sb-icon i { color: #fff; font-size: 15px; }
+.sb-wordmark { line-height: 1; }
+.sb-title { color: #fff; font-size: 13px; font-weight: 700; letter-spacing: -.01em; }
+.sb-sub   { color: var(--sb-text); font-size: 10.5px; font-weight: 400; margin-top: 2px; }
+
+.sidebar-nav { list-style: none; padding: 8px 0; margin: 0; flex: 1; }
+.sidebar-nav li {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 12px;
+  margin: 1px 8px;
+  border-radius: 6px;
+  color: var(--sb-text);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: background .12s, color .12s;
+  user-select: none;
+}
+.sidebar-nav li i { font-size: 14px; width: 16px; text-align: center; flex-shrink: 0; }
+.sidebar-nav li:hover  { background: var(--sb-hover); color: rgba(255,255,255,.85); }
+.sidebar-nav li.active { background: var(--sb-active); color: #fff; font-weight: 600; }
+.sidebar-nav li.active i { color: #93C5FD; }
+
+.sidebar-footer {
+  padding: 10px 14px;
+  border-top: 1px solid var(--sb-border);
+  font-size: 10px;
+}
+.sb-user { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+.sb-avatar { width:28px; height:28px; border-radius:50%; background:rgba(255,255,255,.15); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#fff; flex-shrink:0; }
+.sb-name { font-size:11.5px; font-weight:600; color:rgba(255,255,255,.75); flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.sb-logout { font-size:10px; color:rgba(255,255,255,.35); text-decoration:none; display:block; text-align:center; padding:4px; border-top:1px solid var(--sb-border); margin-top:2px; transition:color .12s; }
+.sb-logout:hover { color:rgba(255,255,255,.7); }
+
+/* ── Main wrapper ─────────────────────────────────────────────────────────── */
+.main-wrap { flex: 1; overflow: hidden; display: flex; flex-direction: column; height: 100vh; min-width: 0; }
+.view { display: none; flex: 1; flex-direction: column; overflow: hidden; min-height: 0; }
+.view.active { display: flex; }
+#view-dashboard .view-body { overflow-y:auto; }
+#dash-alerts-row .alert-tab-pane { max-height:220px; overflow-y:auto; }
+.tl-list { max-height:340px; overflow-y:auto; }
+
+/* ── View header bar ──────────────────────────────────────────────────────── */
+.view-header {
+  padding: 0 24px;
+  height: 52px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.view-header h1 {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--t1);
+  margin: 0;
+  letter-spacing: -.01em;
+}
+.view-header .vsub { font-size: 11.5px; color: var(--t3); margin-left: 4px; }
+.view-body { flex: 1; overflow-y: auto; padding: 20px 24px; min-height: 0; }
+
+/* ── Dashboard ────────────────────────────────────────────────────────────── */
+.stat-card {
+  background: var(--surface); border-radius: 11px;
+  padding: 1rem 1.15rem; box-shadow: 0 1px 4px rgba(0,0,0,.07); border-left: 4px solid;
+}
+.stat-card .sv { font-size: 1.9rem; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+.stat-card .sl { font-size: .74rem; color: var(--t2); margin-top: .25rem; }
+.s-total { border-color: var(--th-base); }
+.s-exp   { border-color: var(--red); }
+.s-soon  { border-color: #d97706; }
+.s-ok    { border-color: var(--green); }
+
+.alerts-panel { background: var(--surface); border-radius: 11px; box-shadow: 0 1px 4px rgba(0,0,0,.07); overflow: hidden; }
+.ap-head { background: var(--th-base); color: #fff; padding: .65rem 1rem; font-weight: 600; font-size: .82rem; display: flex; align-items: center; gap: .5rem; }
+.alert-item { display: flex; align-items: flex-start; gap: .7rem; padding: .65rem 1rem; border-bottom: 1px solid var(--surface-2); }
+.alert-item:last-child { border-bottom: none; }
+.alert-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+.alert-dot.expired { background: var(--red); }
+.alert-dot.soon    { background: #d97706; }
+.ai-co  { font-weight: 600; font-size: .81rem; color: var(--t1); }
+.ai-det { font-size: .73rem; color: var(--t2); }
+.ai-det strong { font-weight: 600; }
+.alert-empty { padding: 1.75rem; text-align: center; color: var(--t3); font-size: .8rem; }
+
+.alert-tabs { display:flex; border-bottom: 1px solid var(--border); background: var(--surface); }
+.alert-tab { flex:1; padding:.55rem .75rem; font-size:.76rem; font-weight:600; color:var(--t2); cursor:pointer; text-align:center; border:none; background:none; border-bottom:2px solid transparent; transition:all .12s; font-family:inherit; }
+.alert-tab:hover { color:var(--t1); }
+.alert-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+.alert-tab-pane { display:none; max-height:220px; overflow-y:auto; }
+.alert-tab-pane.active { display:block; }
+.timeline-panel { background: var(--surface); border-radius: 11px; box-shadow: 0 1px 4px rgba(0,0,0,.07); overflow: hidden; }
+.timeline-panel .ap-head { background: #1e3a5f; }
+.tl-list { max-height: 340px; overflow-y: auto; }
+.tl-item { display: flex; align-items: center; gap: .75rem; padding: .55rem 1rem; border-bottom: 1px solid var(--surface-2); border-left: 3px solid transparent; }
+.tl-item:last-child { border-bottom: none; }
+.tl-item.tl-overdue { border-left-color: var(--red); }
+.tl-item.tl-urgent  { border-left-color: #d97706; }
+.tl-item.tl-ok      { border-left-color: var(--green); }
+.tl-date { font-size: .7rem; font-weight: 700; color: var(--t2); min-width: 62px; font-variant-numeric: tabular-nums; }
+.tl-co   { font-weight: 600; font-size: .8rem; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
+.tl-co:hover { color: var(--accent); }
+.tl-type { font-size: .67rem; font-weight: 700; padding: 2px 6px; border-radius: 4px; white-space: nowrap; }
+.tl-type.tt-dnb   { background: rgba(37,99,235,.12);  color: #1d4ed8; }
+.tl-type.tt-audit { background: rgba(5,150,105,.12);  color: #047857; }
+.tl-type.tt-mgtm  { background: rgba(146,64,14,.12);  color: #92400e; }
+.tl-days { font-size: .7rem; font-weight: 700; white-space: nowrap; }
+.tl-days.overdue { color: var(--red); }
+.tl-days.urgent  { color: #d97706; }
+.tl-days.ok      { color: var(--green); }
+
+/* ── MIS toolbar ──────────────────────────────────────────────────────────── */
+.mis-toolbar {
+  padding: 0 24px;
+  height: 52px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* filter pills */
+.filter-group { display: flex; gap: 2px; }
+.filter-btn {
+  height: 28px; padding: 0 10px;
+  border: 1px solid var(--border);
+  background: transparent;
+  border-radius: 5px;
+  font-size: 12px; font-weight: 500;
+  color: var(--t2);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all .12s;
+}
+.filter-btn:hover { border-color: var(--accent); color: var(--accent); }
+.filter-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+
+.toolbar-sep { width: 1px; height: 20px; background: var(--border); flex-shrink: 0; }
+
+/* search */
+.tb-search {
+  display: flex; align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  height: 30px;
+  padding: 0 8px;
+  gap: 6px;
+  background: var(--surface);
+  transition: border-color .12s;
+  min-width: 180px;
+}
+.tb-search:focus-within { border-color: var(--accent); }
+.tb-search i { color: var(--t3); font-size: 12px; flex-shrink: 0; }
+.tb-search input {
+  border: none; outline: none; background: transparent;
+  font-family: inherit; font-size: 12.5px; color: var(--t1);
+  width: 100%;
+}
+.tb-search input::placeholder { color: var(--t3); }
+
+/* country select */
+.tb-select {
+  height: 30px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 12.5px;
+  color: var(--t1);
+  padding: 0 8px;
+  background: var(--surface);
+  cursor: pointer;
+  outline: none;
+}
+.tb-select:focus { border-color: var(--accent); }
+
+.count-badge {
+  font-size: 11px; font-weight: 600;
+  color: var(--t3);
+  white-space: nowrap;
+  letter-spacing: .01em;
+}
+
+/* view toggle */
+.vtoggle { display: flex; gap: 2px; }
+.vtoggle button {
+  width: 30px; height: 30px; padding: 0;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--border);
+  background: transparent;
+  border-radius: 5px;
+  color: var(--t3);
+  cursor: pointer;
+  font-size: 14px;
+  transition: all .12s;
+}
+.vtoggle button:hover  { border-color: var(--accent); color: var(--accent); }
+.vtoggle button.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+/* toolbar action buttons */
+.tb-btn {
+  height: 30px; padding: 0 12px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex; align-items: center; gap: 5px;
+  transition: all .12s;
+  white-space: nowrap;
+}
+.tb-btn i { font-size: 12px; }
+.tb-btn-outline { background: transparent; border-color: var(--border); color: var(--t2); }
+.tb-btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+.tb-btn-primary { background: var(--accent); color: #fff; }
+.tb-btn-primary:hover { background: #1742B8; }
+.tb-btn-excel { background: #15803D; color: #fff; }
+.tb-btn-excel:hover { background: #166534; }
+.tb-btn-pdf { background: #B91C1C; color: #fff; }
+.tb-btn-pdf:hover { background: #991B1B; }
+
+/* ── Table ────────────────────────────────────────────────────────────────── */
+.tbl-wrap { flex:1; overflow:auto; min-height:0; }
+table.mis { min-width:2150px; margin:0; background:var(--surface); border-collapse:collapse; }
+table.mis thead th {
+  color:#fff; font-size:.75rem; font-weight:600;
+  padding:7px 7px; white-space:nowrap; text-align:center;
+  border:1px solid rgba(255,255,255,.18); position:sticky; top:0; z-index:20;
+}
+.gh-base  { background:var(--th-base)  !important; color:#fff !important; }
+.gh-dnb   { background:var(--th-dnb)   !important; color:#fff !important; }
+.gh-audit { background:var(--th-audit) !important; color:#fff !important; }
+.gh-mgtm  { background:var(--th-mgtm) !important; color:#fff !important; }
+.gh-cb    { background:var(--th-cb)    !important; color:#fff !important; }
+table.mis thead th[data-sf] { cursor:pointer; user-select:none; }
+table.mis thead th[data-sf]:hover { filter:brightness(1.14); }
+table.mis thead th[data-sf]::after { content:' \00a0'; display:inline-block; width:10px; }
+table.mis thead th.sort-asc::after  { content:' ↑'; }
+table.mis thead th.sort-desc::after { content:' ↓'; }
+table.mis thead th.rsort-asc::after  { content:' ↑'; color:#fbbf24; }
+table.mis thead th.rsort-desc::after { content:' ↓'; color:#fbbf24; }
+table.mis tbody tr.row-sel td { background: rgba(99,102,241,.12) !important; }
+table.mis tbody td.sel-handle { cursor: cell; }
+.sel-badge { display:none; align-items:center; gap:5px; background:rgba(99,102,241,.1); border:1px solid rgba(99,102,241,.35); color:#4338ca; border-radius:6px; font-size:11px; font-weight:600; padding:3px 9px; white-space:nowrap; }
+.sel-badge.on { display:flex; }
+.sel-badge button { background:none; border:none; color:#6366f1; cursor:pointer; font-size:14px; padding:0 0 0 2px; line-height:1; }
+thead .sc1 { position:sticky; left:0;    z-index:30 !important; background:var(--th-base) !important; }
+thead .sc2 { position:sticky; left:52px; z-index:30 !important; background:var(--th-base) !important; }
+thead .sc3 { position:sticky; left:96px; z-index:30 !important; background:var(--th-base) !important; box-shadow:2px 0 0 rgba(255,255,255,.55) !important; }
+table.mis tbody td { font-size:.8rem; padding:6px 7px; vertical-align:middle; border:1px solid var(--border); color:var(--t1); }
+table.mis tbody tr:nth-child(odd)  td { background:var(--surface); }
+table.mis tbody tr:nth-child(even) td { background:var(--surface-2); }
+table.mis tbody tr:hover td { background:var(--accent-lt) !important; cursor:pointer; }
+tbody .sc1 { position:sticky; left:0;    z-index:10 !important; }
+tbody .sc2 { position:sticky; left:52px; z-index:10 !important; }
+tbody .sc3 { position:sticky; left:96px; z-index:10 !important; box-shadow:2px 0 0 var(--border-2); }
+table.mis tbody tr:nth-child(odd)  .sc1,
+table.mis tbody tr:nth-child(odd)  .sc2,
+table.mis tbody tr:nth-child(odd)  .sc3 { background:var(--surface)   !important; }
+table.mis tbody tr:nth-child(even) .sc1,
+table.mis tbody tr:nth-child(even) .sc2,
+table.mis tbody tr:nth-child(even) .sc3 { background:var(--surface-2) !important; }
+table.mis tbody tr:hover           .sc1,
+table.mis tbody tr:hover           .sc2,
+table.mis tbody tr:hover           .sc3 { background:var(--accent-lt)  !important; }
+
+/* ── Country divider row in list view ───────────────────────────────────── */
+.country-sep-row td {
+  background: var(--surface-2) !important;
+  color: var(--t3);
+  font-size: 10.5px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .07em;
+  padding: 5px 8px;
+  border-top: 2px solid var(--border-2);
+  border-bottom: 1px solid var(--border);
+  cursor: default;
+}
+.country-sep-row:hover td { background: var(--surface-2) !important; }
+
+/* ── Grid view ────────────────────────────────────────────────────────────── */
+.grid-wrap { flex: 1; overflow-y: auto; padding: 20px 24px; min-height: 0; display: none; }
+#view-mis.grid-mode .tbl-wrap  { display: none; }
+#view-mis.grid-mode .grid-wrap { display: block; }
+
+.country-hdr {
+  font-size: 10.5px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .07em;
+  color: var(--t3);
+  padding: 6px 0 6px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 10px;
+}
+.country-hdr + .country-hdr, .row + .country-hdr { margin-top: 20px; }
+.country-hdr .fw-normal { font-weight: 400; opacity: .75; }
+
+.co-card {
+  background: var(--surface);
+  border-radius: 8px;
+  padding: 14px 15px;
+  height: 100%;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: border-color .13s, box-shadow .13s;
+  position: relative;
+}
+.co-card:hover { border-color: var(--accent-mid); box-shadow: 0 4px 16px rgba(29,78,216,.09); }
+.co-card .cc-top  { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--t3); margin-bottom: 4px; display: flex; align-items: center; gap: 5px; }
+.co-card .cc-name { font-size: 13px; font-weight: 700; color: var(--t1); line-height: 1.3; }
+.co-card .cc-act  { font-size: 11px; color: var(--t3); margin-top: 3px; }
+.co-card .cc-pills{ margin-top: 8px; display: flex; gap: 4px; flex-wrap: wrap; }
+
+.card-del {
+  position: absolute; top: 8px; right: 8px;
+  width: 24px; height: 24px;
+  border: none; border-radius: 5px;
+  background: var(--red-lt); color: var(--red);
+  cursor: pointer;
+  display: none; align-items: center; justify-content: center;
+  font-size: 11px;
+  transition: background .12s;
+}
+.card-del:hover { background: #FECACA; }
+.co-card:hover .card-del { display: flex; }
+
+/* ── Badges / status ──────────────────────────────────────────────────────── */
+.cat-badge {
+  display: inline-flex;
+  width: 20px; height: 20px;
+  align-items: center; justify-content: center;
+  border-radius: 50%;
+  font-size: 10px; font-weight: 700; color: #fff;
+  flex-shrink: 0;
+}
+.cat-A { background: var(--green); }
+.cat-B { background: var(--accent); }
+
+.d-valid   { color: var(--green); font-weight: 600; }
+.d-expired { color: var(--red);   font-weight: 600; }
+.d-na      { color: var(--t3); }
+.co-name   { font-weight: 600; color: var(--t1); }
+
+.btn-act {
+  padding: 2px 7px;
+  font-size: 11px;
+  border-radius: 4px;
+  line-height: 1.5;
+}
+
+/* status pills in grid */
+.spill {
+  font-size: 10px; font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  display: inline-block;
+}
+.spill-ok  { background: var(--grn-lt); color: var(--green); }
+.spill-exp { background: var(--red-lt); color: var(--red);   }
+.spill-soon{ background: var(--amb-lt); color: var(--amber); }
+
+/* ── Company detail ───────────────────────────────────────────────────────── */
+.detail-body { flex: 1; overflow-y: auto; padding: 20px 24px; min-height: 0; }
+
+.detail-card {
+  background: var(--surface);
+  border-radius: 8px;
+  padding: 18px 20px;
+  border: 1px solid var(--border);
+  height: 100%;
+}
+.detail-sec-title {
+  font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .07em;
+  padding: 4px 9px;
+  border-radius: 5px;
+  margin-bottom: 14px;
+  display: inline-block;
+}
+.dst-base  { background: var(--accent-lt); color: var(--accent); }
+.dst-dnb   { background: #DBEAFE;          color: #1E40AF; }
+.dst-mgtm  { background: var(--amb-lt);    color: #92400E; }
+.dst-audit { background: var(--grn-lt);    color: #166534; }
+
+.df { margin-bottom: 12px; }
+.df-label {
+  font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .05em;
+  color: var(--t3); margin-bottom: 3px;
+}
+.df-value { font-size: 13px; font-weight: 600; color: var(--t1); }
+.df-value.empty { color: var(--t3); font-weight: 400; font-style: italic; font-size: 12px; }
+
+/* ── Settings ─────────────────────────────────────────────────────────────── */
+.settings-card {
+  background: var(--surface);
+  border-radius: 8px;
+  padding: 18px 20px;
+  border: 1px solid var(--border);
+  margin-bottom: 12px;
+}
+.settings-card h3 {
+  font-size: 13px; font-weight: 700;
+  color: var(--t1);
+  margin: 0 0 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 7px;
+}
+.settings-card h3 i { color: var(--t2); font-size: 14px; }
+.settings-card .hint-text { font-size: 11.5px; color: var(--t2); margin-bottom: 10px; }
+
+.tag-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 8px 4px 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  font-size: 12px; font-weight: 500;
+  color: var(--t1);
+}
+.tag-chip .btn-close { font-size: 8px; opacity: .4; }
+.tag-chip .btn-close:hover { opacity: 1; }
+
+/* ── Modal / form ─────────────────────────────────────────────────────────── */
+.modal-header.navy {
+  background: var(--th-base);
+  color: #fff;
+  padding: 14px 20px;
+}
+.modal-header.navy .modal-title { font-size: 14px; font-weight: 700; }
+.modal-header.navy .btn-close   { filter: invert(1) opacity(.6); }
+
+.sec-label {
+  font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .07em;
+  color: var(--t3);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 4px;
+  margin: 16px 0 8px;
+}
+.sl-dnb   { color: #1D4ED8; border-color: #BFDBFE; }
+.sl-audit { color: var(--green); border-color: #BBF7D0; }
+.sl-mgtm  { color: #B45309;     border-color: #FED7AA; }
+.sl-cb    { color: #4338CA;     border-color: #C7D2FE; }
+
+/* date + N/A group */
+.date-group { display: flex; align-items: center; gap: 6px; }
+.date-group input[type="date"] { flex: 1; min-width: 0; }
+.na-wrap { display: flex; align-items: center; gap: 4px; white-space: nowrap; cursor: pointer; }
+.na-wrap .form-check-input { margin: 0; cursor: pointer; }
+.na-wrap label { font-size: 11.5px; color: var(--t2); cursor: pointer; margin: 0; }
+
+/* Bootstrap form overrides */
+.form-control, .form-select {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13px;
+  border-color: var(--border);
+  color: var(--t1);
+  border-radius: 6px;
+}
+.form-control:focus, .form-select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(29,78,216,.1);
+}
+.form-label {
+  font-size: 11.5px; font-weight: 600;
+  color: var(--t2);
+}
+.modal-body { padding: 16px 20px 8px; }
+.modal-footer { padding: 10px 20px; }
+
+/* ── Toast ────────────────────────────────────────────────────────────────── */
+.toast-box { position: fixed; bottom: 20px; right: 20px; z-index: 9999; min-width: 240px; }
+.toast { border-radius: 8px !important; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13px; }
+
+/* ── Scrollbar ────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--t3); }
+
+/* ── User management ─────────────────────────────────────────────────────── */
+.um-table { width:100%; border-collapse:collapse; font-size:.82rem; }
+.um-table th { background:var(--th-base); color:#fff; padding:8px 12px; font-weight:600; font-size:.75rem; text-align:left; }
+.um-table td { padding:10px 12px; border-bottom:1px solid var(--border); vertical-align:middle; color:var(--t1); }
+.um-table tr:last-child td { border-bottom:none; }
+.um-table tr:hover td { background:var(--accent-lt); }
+.role-badge { display:inline-block; padding:2px 8px; border-radius:5px; font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.03em; }
+.rb-superadmin { background:#fef3c7; color:#92400e; }
+.rb-admin      { background:#dbeafe; color:#1e40af; }
+.rb-user       { background:var(--surface-2); color:var(--t2); }
+.status-pill { display:inline-block; padding:2px 8px; border-radius:5px; font-size:.72rem; font-weight:700; }
+.sp-approved { background:var(--grn-lt); color:var(--green); }
+.sp-pending  { background:#fffbeb; color:#b45309; }
+.pending-dot { display:inline-flex; align-items:center; justify-content:center; background:#dc2626; color:#fff; border-radius:9px; font-size:9px; font-weight:700; min-width:16px; height:16px; padding:0 4px; margin-left:4px; }
+.sidebar-nav .sb-admin-link { display:none !important; }
+body.view-only .edit-only { display:none !important; }
+.btn-icon { background:none; border:none; padding:2px 4px; cursor:pointer; border-radius:4px; line-height:1; }
+.btn-icon:hover { background:var(--surface-2); }
+.alert-item.mine { background:#fffbeb; border-left:3px solid #d97706; }
+.mine-tag { display:inline-block; background:#d97706; color:#fff; font-size:.65rem; font-weight:700; padding:1px 5px; border-radius:3px; margin-left:6px; vertical-align:middle; letter-spacing:.03em; }
+/* ── Notification bell ───────────────────────────────────────────────────── */
+.notif-wrap { position:relative; margin-left:auto; }
+.notif-bell { width:34px; height:34px; border-radius:8px; border:1px solid var(--border); background:var(--surface); display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--t2); font-size:16px; transition:all .12s; }
+.notif-bell:hover { border-color:var(--accent); color:var(--accent); }
+.notif-badge { position:absolute; top:-5px; right:-5px; background:var(--red); color:#fff; font-size:9px; font-weight:700; min-width:16px; height:16px; border-radius:8px; padding:0 4px; display:flex; align-items:center; justify-content:center; display:none; }
+.notif-panel { position:absolute; top:calc(100% + 8px); right:0; width:340px; background:var(--surface); border:1px solid var(--border); border-radius:12px; box-shadow:0 8px 32px rgba(0,0,0,.12); z-index:200; display:none; overflow:hidden; }
+.notif-panel.open { display:block; }
+.notif-head { padding:.65rem 1rem; font-weight:700; font-size:.8rem; color:var(--t1); border-bottom:1px solid var(--border); display:flex; align-items:center; gap:.5rem; }
+.notif-list { max-height:380px; overflow-y:auto; }
+.notif-item { padding:.65rem 1rem; border-bottom:1px solid var(--surface-2); }
+.notif-item:last-child { border-bottom:none; }
+.notif-item.overdue { border-left:3px solid var(--red); }
+.notif-item.soon { border-left:3px solid #d97706; }
+.notif-co { font-weight:600; font-size:.82rem; color:var(--t1); }
+.notif-det { font-size:.73rem; color:var(--t2); margin-top:2px; }
+.notif-det strong { color:var(--t1); }
+.notif-empty { padding:2rem; text-align:center; color:var(--t3); font-size:.8rem; }
+/* ── Responsive ───────────────────────────────────────────────────────────── */
+.sb-toggle { display:none; width:34px; height:34px; align-items:center; justify-content:center; border:1px solid var(--border); border-radius:7px; background:var(--surface); cursor:pointer; color:var(--t2); font-size:18px; flex-shrink:0; }
+.sb-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:499; }
+.sb-overlay.show { display:block; }
+
+@media (max-width: 768px) {
+  .sb-toggle { display:flex; }
+  .sidebar {
+    position:fixed; left:0; top:0; height:100%;
+    transform:translateX(-100%);
+    transition:transform .25s cubic-bezier(.4,0,.2,1);
+    z-index:500;
+  }
+  .sidebar.sb-open { transform:translateX(0); }
+  .main-wrap { width:100%; }
+  .view-header { padding:0 10px; gap:6px; }
+  .view-header .vsub { display:none; }
+  .view-body { padding:12px 10px; }
+  .mis-toolbar { height:auto; flex-wrap:wrap; padding:6px 10px; gap:5px; row-gap:5px; }
+  .mis-toolbar .toolbar-sep { display:none; }
+  .mis-toolbar .tb-search { min-width:130px; flex:1; }
+  .detail-body { padding:12px 10px; }
+  .notif-panel { position:fixed; right:8px; left:8px; width:auto; top:60px; }
+  .um-table th, .um-table td { padding:7px 8px; font-size:.78rem; }
+  .grid-wrap { padding:12px 10px; }
+  .view-body .row.g-3 { --bs-gutter-x: 0.75rem; }
+  #view-settings .view-body { padding:12px 10px; }
+  .settings-card { padding:14px 14px; }
+  .settings-card .row { --bs-gutter-x:0.5rem; }
+}
+
+@media (max-width: 640px) {
+  /* Users table: hide Joined on tablet */
+  .um-col-joined { display:none; }
+}
+
+@media (max-width: 480px) {
+  .view-header { height:48px; }
+  .view-header h1 { font-size:13px; }
+  .modal-dialog { margin:8px; }
+  .modal-dialog.modal-lg { max-width:calc(100vw - 16px); }
+  .modal-body { padding:12px 14px 4px; }
+  .notif-panel { top:56px; }
+  .stat-card .sv { font-size:1.5rem; }
+  .tb-btn { padding:0 8px; font-size:11.5px; }
+  .filter-btn { padding:0 7px; font-size:11px; }
+  .count-badge { display:none; }
+  .mis-toolbar .vtoggle { display:none; }
+  /* Users table: also hide Email and Staff Link on small phones */
+  .um-col-email, .um-col-link { display:none; }
+  /* Show status as text to save space */
+  .um-col-status .status-pill { font-size:.65rem; padding:1px 5px; }
+}
+</style>
+</head>
+<body>
+
+<div class="sb-overlay" id="sb-overlay" onclick="closeSidebar()"></div>
+
+<!-- ═══ SIDEBAR ═══ -->
+<nav class="sidebar">
+  <div class="sidebar-brand">
+    <div class="sb-icon"><i class="bi bi-building-fill"></i></div>
+    <div class="sb-wordmark">
+      <div class="sb-title">Corporate Credit</div>
+      <div class="sb-sub">MIS Platform</div>
+    </div>
+  </div>
+  <ul class="sidebar-nav" id="sidebar-nav">
+    <li data-view="dashboard" class="active"><i class="bi bi-grid-1x2"></i>Dashboard</li>
+    <li data-view="mis"><i class="bi bi-table"></i>MIS</li>
+    <li data-view="settings" class="sb-admin-link edit-only"><i class="bi bi-sliders"></i>Settings</li>
+    <li data-view="users" id="nav-users" class="sb-admin-link"><i class="bi bi-people-fill"></i>Users<span class="pending-dot" id="pending-badge" style="display:none">0</span></li>
+    <li data-view="logs" class="sb-admin-link"><i class="bi bi-journal-text"></i>Logs</li>
+  </ul>
+  <div class="sidebar-footer">
+    <div class="sb-user"><div class="sb-avatar" id="sb-av">?</div><span class="sb-name" id="sb-name">Loading…</span></div>
+    <a class="sb-logout" href="/logout"><i class="bi bi-box-arrow-left"></i> Sign out</a>
+  </div>
+</nav>
+
+<!-- ═══ MAIN ═══ -->
+<div class="main-wrap">
+
+  <!-- ── DASHBOARD ── -->
+  <div class="view active" id="view-dashboard">
+    <div class="view-header">
+      <button class="sb-toggle" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
+      <h1>Dashboard</h1>
+      <span class="vsub" id="date-label"></span>
+      <div class="notif-wrap" id="notif-wrap" style="display:none">
+        <div class="notif-bell" id="notif-bell" onclick="toggleNotifPanel()">
+          <i class="bi bi-bell-fill"></i>
+          <span class="notif-badge" id="notif-badge"></span>
+        </div>
+        <div class="notif-panel" id="notif-panel">
+          <div class="notif-head"><i class="bi bi-bell-fill text-warning"></i>Your Responsibilities</div>
+          <div class="notif-list" id="notif-list"></div>
+        </div>
+      </div>
+    </div>
+    <div class="view-body">
+
+      <div class="row g-3 mb-3">
+        <div class="col-6 col-lg-3"><div class="stat-card s-total"><div class="sv" id="st-total">0</div><div class="sl">Total Companies</div></div></div>
+        <div class="col-6 col-lg-3"><div class="stat-card s-exp"><div class="sv" style="color:var(--red)" id="st-expired">0</div><div class="sl">Expired Reports</div></div></div>
+        <div class="col-6 col-lg-3"><div class="stat-card s-soon"><div class="sv" style="color:#d97706" id="st-soon">0</div><div class="sl">Expiring in 30 Days</div></div></div>
+        <div class="col-6 col-lg-3"><div class="stat-card s-ok"><div class="sv" style="color:var(--green)" id="st-ok">0</div><div class="sl">All Clear</div></div></div>
+      </div>
+      <div class="row g-3" id="dash-alerts-row">
+        <div class="col-12">
+          <div class="alerts-panel">
+            <div class="ap-head"><i class="bi bi-bell-fill text-warning"></i>Report Alerts</div>
+            <div class="alert-tabs">
+              <button class="alert-tab active" onclick="switchAlertTab('dnb',this)">D&amp;B Reports</button>
+              <button class="alert-tab" onclick="switchAlertTab('audit',this)">Audit Reports</button>
+              <button class="alert-tab" onclick="switchAlertTab('mgtm',this)">In-House Due</button>
+            </div>
+            <div id="alerts-dnb"   class="alert-tab-pane active"></div>
+            <div id="alerts-audit" class="alert-tab-pane"></div>
+            <div id="alerts-mgtm"  class="alert-tab-pane"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-3 mt-3" id="dash-tl-row">
+        <div class="col-12">
+          <div class="timeline-panel">
+            <div class="ap-head"><i class="bi bi-calendar2-range-fill"></i>Next 60 Days — Actions Due</div>
+            <div class="tl-list" id="tl-list"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── MIS ── -->
+  <div class="view" id="view-mis">
+    <div class="mis-toolbar">
+      <button class="sb-toggle" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
+      <span style="font-size:11px;font-weight:700;color:var(--t3);letter-spacing:.04em;text-transform:uppercase">Cat</span>
+      <div class="filter-group" id="cat-btns">
+        <button class="filter-btn active" data-cat="">All</button>
+        <button class="filter-btn"        data-cat="A">A</button>
+        <button class="filter-btn"        data-cat="B">B</button>
+      </div>
+      <div class="toolbar-sep"></div>
+      <select class="tb-select" id="country-sel"><option value="">All Countries</option></select>
+      <div class="tb-search">
+        <i class="bi bi-search"></i>
+        <input type="text" id="search-box" placeholder="Search companies…">
+      </div>
+      <span class="count-badge" id="count-badge">0 records</span>
+      <span class="sel-badge" id="sel-badge"><i class="bi bi-table"></i><span id="sel-count"></span> selected <button onclick="clearSel()" title="Clear selection">×</button></span>
+      <div class="ms-auto d-flex align-items-center gap-2">
+        <button class="tb-btn tb-btn-excel edit-only" onclick="exportExcel()"><i class="bi bi-file-earmark-excel"></i>Export All</button>
+        <button class="tb-btn tb-btn-pdf edit-only" onclick="exportPDF()"><i class="bi bi-file-earmark-pdf"></i>Export PDF</button>
+        <button class="tb-btn tb-btn-primary edit-only" onclick="openAdd()"><i class="bi bi-plus-lg"></i>Add Company</button>
+        <div class="toolbar-sep"></div>
+        <div class="vtoggle">
+          <button id="btn-lv" class="active" title="List view" onclick="setMisView('list')"><i class="bi bi-list-ul"></i></button>
+          <button id="btn-gv" title="Grid view" onclick="setMisView('grid')"><i class="bi bi-grid-fill"></i></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- List view -->
+    <div class="tbl-wrap">
+      <table class="table table-bordered mis">
+        <thead>
+          <tr>
+            <th class="sc1 gh-base" style="width:52px"     data-sf="sr_no">SR.</th>
+            <th class="sc2 gh-base" style="width:44px"     data-sf="cat">Cat</th>
+            <th class="sc3 gh-base" style="min-width:200px" data-sf="company_name">Company Name</th>
+            <th class="gh-base"  style="min-width:140px"   data-sf="activity">Activity</th>
+            <th class="gh-base"  style="width:75px"        data-sf="country">Country</th>
+            <th class="gh-dnb"   style="width:110px"       data-sf="dnb_rep_validity">D&amp;B Validity</th>
+            <th class="gh-dnb"   style="width:85px"        data-sf="dnb_rating">D&amp;B Rating</th>
+            <th class="gh-dnb"   style="width:118px"       data-sf="dnb_processed_by">Processed By</th>
+            <th class="gh-audit" style="width:100px"       data-sf="audit_rep">Last Audit</th>
+            <th class="gh-audit" style="width:118px"       data-sf="audit_processed_by">Processed By</th>
+            <th class="gh-audit" style="width:118px"       data-sf="audit_prepared_by">Auditor Name</th>
+            <th class="gh-mgtm"  style="width:88px"        data-sf="mgtm_ac_q1">Mgtm Q1</th>
+            <th class="gh-mgtm"  style="width:88px"        data-sf="mgtm_ac_q2">Mgtm Q2</th>
+            <th class="gh-mgtm"  style="width:88px"        data-sf="mgtm_ac_q3">Mgtm Q3</th>
+            <th class="gh-mgtm"  style="width:88px"        data-sf="mgtm_ac_q4">Mgtm Q4</th>
+            <th class="gh-cb"    style="width:88px"        data-sf="aecb_dir">AECB Dir</th>
+            <th class="gh-cb"    style="width:95px"        data-sf="aecb_com">AECB Com</th>
+            <th class="gh-cb"    style="width:88px"        data-sf="cibil_dir">Cibil Dir</th>
+            <th class="gh-base"  style="min-width:155px"   data-sf="remarks">Remarks</th>
+            <th class="gh-base edit-only"  style="width:80px">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="tbody">
+          <tr><td colspan="20" class="text-center py-5" style="color:var(--t3)"><i class="bi bi-hourglass-split me-2"></i>Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Grid view -->
+    <div class="grid-wrap"><div id="grid-content"></div></div>
+  </div>
+
+  <!-- ── COMPANY DETAIL ── -->
+  <div class="view" id="view-company">
+    <div class="view-header">
+      <button class="tb-btn tb-btn-outline" onclick="navTo('mis')"><i class="bi bi-arrow-left"></i>Back</button>
+      <h1 class="ms-2 me-auto" id="detail-title" style="font-size:14px"></h1>
+      <button class="tb-btn tb-btn-outline edit-only" id="btn-detail-edit"><i class="bi bi-pencil"></i>Edit</button>
+      <button class="tb-btn edit-only" style="background:var(--red-lt);color:var(--red);border-color:transparent" id="btn-detail-delete"><i class="bi bi-trash"></i>Delete</button>
+      <button class="tb-btn tb-btn-excel edit-only" id="btn-detail-export"><i class="bi bi-file-earmark-excel"></i>Export</button>
+    </div>
+    <div class="detail-body"><div class="row g-3" id="detail-content"></div></div>
+  </div>
+
+  <!-- ── SETTINGS ── -->
+  <div class="view" id="view-settings">
+    <div class="view-header">
+      <button class="sb-toggle" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
+      <h1>Settings</h1>
+      <span class="vsub">Manage dropdown lists and preferences</span>
+    </div>
+    <div class="view-body">
+      <div class="row g-3 mb-3">
+        <div class="col-md-6" id="sc-staff"></div>
+        <div class="col-md-6" id="sc-countries"></div>
+        <div class="col-md-6" id="sc-activities"></div>
+        <div class="col-md-6">
+          <div id="sc-ratings"></div>
+          <div id="sc-aecb" class="mt-3"></div>
+        </div>
+      </div>
+      <div class="settings-card">
+        <h3><i class="bi bi-file-earmark-excel"></i>Export</h3>
+        <p class="hint-text mb-3">Download the full MIS as a formatted Excel workbook.</p>
+        <div class="d-flex gap-2">
+          <button class="tb-btn tb-btn-excel" onclick="exportExcel()"><i class="bi bi-file-earmark-excel"></i>Export All to Excel</button>
+          <button class="tb-btn tb-btn-pdf" onclick="exportPDF()"><i class="bi bi-file-earmark-pdf"></i>Export All to PDF</button>
+        </div>
+      </div>
+      <div class="settings-card" id="smtp-card" style="display:none">
+        <h3><i class="bi bi-envelope-at"></i>Email / SMTP</h3>
+        <p class="hint-text mb-3">Configure Gmail SMTP to send password reset emails automatically. You need a Gmail <strong>App Password</strong> — not your regular Gmail password. Enable 2-Step Verification at myaccount.google.com, then search "App passwords" to generate one.</p>
+        <div class="row g-2 mb-3">
+          <div class="col-md-6">
+            <label style="font-size:.76rem;font-weight:600;display:block;margin-bottom:5px">Gmail Address</label>
+            <input type="email" id="smtp-email" placeholder="yourapp@gmail.com" style="width:100%;padding:8px 11px;border:1.5px solid var(--border);border-radius:7px;font-size:.85rem;font-family:inherit;outline:none" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+          </div>
+          <div class="col-md-6">
+            <label style="font-size:.76rem;font-weight:600;display:block;margin-bottom:5px">App Password <span style="font-weight:400;color:var(--t3)">(leave blank to keep existing)</span></label>
+            <input type="password" id="smtp-password" placeholder="••••••••••••••••" style="width:100%;padding:8px 11px;border:1.5px solid var(--border);border-radius:7px;font-size:.85rem;font-family:inherit;outline:none" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+          </div>
+        </div>
+        <div class="d-flex align-items-center gap-3">
+          <button class="tb-btn" onclick="saveSMTP()"><i class="bi bi-check2"></i>Save SMTP Settings</button>
+          <span id="smtp-msg" style="font-size:.78rem"></span>
+        </div>
+      </div>
+      <div class="settings-card" id="backup-card" style="display:none">
+        <h3><i class="bi bi-database"></i>Backup &amp; Restore</h3>
+        <p class="hint-text mb-3">Back up all data (companies, users, settings, logs) to a JSON file. Restoring will <strong>overwrite all current data</strong> — only do this from a trusted backup.</p>
+        <div class="d-flex align-items-center gap-3 mb-3">
+          <button class="tb-btn" onclick="doBackup()"><i class="bi bi-download"></i>Download Backup</button>
+          <span style="font-size:.76rem;color:var(--t3)">Exports everything as a .json file</span>
+        </div>
+        <div style="border-top:1px solid var(--border);padding-top:14px;margin-top:4px">
+          <p class="hint-text mb-2" style="color:var(--amber)"><i class="bi bi-exclamation-triangle-fill me-1"></i>Restore will replace ALL current data with the backup.</p>
+          <div class="d-flex align-items-center gap-3">
+            <label class="tb-btn tb-btn-outline" style="cursor:pointer;margin:0">
+              <i class="bi bi-upload"></i>Choose Backup File
+              <input type="file" id="restore-file" accept=".json" style="display:none" onchange="previewRestore(this)">
+            </label>
+            <span id="restore-filename" style="font-size:.78rem;color:var(--t2)">No file selected</span>
+            <button class="tb-btn" id="restore-btn" onclick="doRestore()" style="display:none;background:var(--red-lt);color:var(--red);border:none"><i class="bi bi-arrow-counterclockwise"></i>Restore Now</button>
+          </div>
+          <span id="restore-msg" style="font-size:.78rem;display:block;margin-top:8px"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── LOGS ── -->
+  <div class="view" id="view-logs">
+    <div class="view-header">
+      <button class="sb-toggle" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
+      <h1>Activity Logs</h1>
+      <span class="vsub">Full audit trail of all actions</span>
+      <button class="tb-btn ms-auto" id="btn-clear-logs" style="display:none;background:var(--red-lt);color:var(--red);border:none" onclick="clearLogs()"><i class="bi bi-trash"></i>Clear All Logs</button>
+    </div>
+    <div class="view-body p-0">
+      <div style="overflow-x:auto">
+        <table class="um-table" id="log-table">
+          <thead>
+            <tr>
+              <th style="width:150px">Time</th>
+              <th style="width:140px">User</th>
+              <th style="width:100px">Role</th>
+              <th style="width:160px">Action</th>
+              <th>Details</th>
+              <th id="log-del-col" style="width:60px;display:none"></th>
+            </tr>
+          </thead>
+          <tbody id="log-tbody">
+            <tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--t3)"><i class="bi bi-hourglass-split me-2"></i>Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── USERS ── -->
+  <div class="view" id="view-users">
+    <div class="view-header">
+      <button class="sb-toggle" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
+      <h1>User Management</h1>
+      <span class="vsub" id="users-sub">Approve accounts and manage roles</span>
+    </div>
+    <div class="view-body">
+      <div class="settings-card p-0" style="overflow-x:auto">
+        <table class="um-table" id="um-table" style="min-width:600px">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th class="um-col-email">Email</th>
+              <th>Role</th>
+              <th class="um-col-link">Staff Name Link</th>
+              <th class="um-col-status">Status</th>
+              <th class="um-col-joined">Joined</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="um-tbody">
+            <tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--t3)"><i class="bi bi-hourglass-split me-2"></i>Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main-wrap -->
+
+<!-- ═══ Add/Edit Modal ═══ -->
+<div class="modal fade" id="modal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content" style="border:none;border-radius:10px;overflow:hidden">
+      <div class="modal-header navy">
+        <h5 class="modal-title" id="modal-title"><i class="bi bi-building me-2"></i>Add Company</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body pb-2">
+        <input type="hidden" id="f-id">
+
+        <div class="sec-label">Company Information</div>
+        <div class="row g-2">
+          <div class="col-md-2">
+            <label class="form-label mb-1">Category</label>
+            <select class="form-select form-select-sm" id="f-cat">
+              <option value="">—</option>
+              <option value="A">A</option>
+              <option value="B">B</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label mb-1">Company Name <span class="text-danger">*</span></label>
+            <input type="text" class="form-control form-control-sm" id="f-company_name" required>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label mb-1">Country</label>
+            <select class="form-select form-select-sm" id="f-country"></select>
+          </div>
+          <div class="col-md-2"></div>
+          <div class="col-12">
+            <label class="form-label mb-1">Activity</label>
+            <select class="form-select form-select-sm" id="f-activity"></select>
+          </div>
+        </div>
+
+        <div class="sec-label sl-dnb">D&amp;B</div>
+        <div class="row g-2">
+          <div class="col-md-4">
+            <label class="form-label mb-1">Rep Validity</label>
+            <div class="date-group">
+              <input type="date" class="form-control form-control-sm" id="f-dnb_rep_validity">
+              <div class="na-wrap"><input type="checkbox" class="form-check-input" id="f-dnb_rep_validity_na" onchange="toggleNA('dnb_rep_validity')"><label for="f-dnb_rep_validity_na">N/A</label></div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label mb-1">Rating</label>
+            <select class="form-select form-select-sm" id="f-dnb_rating"></select>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label mb-1">Processed By</label>
+            <select class="form-select form-select-sm" id="f-dnb_processed_by"></select>
+          </div>
+        </div>
+
+        <div class="sec-label sl-audit">Audit Report</div>
+        <div class="row g-2">
+          <div class="col-md-4">
+            <label class="form-label mb-1">Date</label>
+            <div class="date-group">
+              <input type="date" class="form-control form-control-sm" id="f-audit_rep">
+              <div class="na-wrap"><input type="checkbox" class="form-check-input" id="f-audit_rep_na" onchange="toggleNA('audit_rep')"><label for="f-audit_rep_na">N/A</label></div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label mb-1">Processed By</label>
+            <select class="form-select form-select-sm" id="f-audit_processed_by"></select>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label mb-1">Auditor Name</label>
+            <select class="form-select form-select-sm" id="f-audit_prepared_by"></select>
+          </div>
+        </div>
+
+        <div class="sec-label sl-mgtm">In-house Reports (Quarterly)</div>
+        <div class="row g-2">
+          <div class="col-md-3">
+            <label class="form-label mb-1">Q1</label>
+            <div class="date-group">
+              <input type="date" class="form-control form-control-sm" id="f-mgtm_ac_q1">
+              <div class="na-wrap"><input type="checkbox" class="form-check-input" id="f-mgtm_ac_q1_na" onchange="toggleNA('mgtm_ac_q1')"><label for="f-mgtm_ac_q1_na">N/A</label></div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label mb-1">Q2</label>
+            <div class="date-group">
+              <input type="date" class="form-control form-control-sm" id="f-mgtm_ac_q2">
+              <div class="na-wrap"><input type="checkbox" class="form-check-input" id="f-mgtm_ac_q2_na" onchange="toggleNA('mgtm_ac_q2')"><label for="f-mgtm_ac_q2_na">N/A</label></div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label mb-1">Q3</label>
+            <div class="date-group">
+              <input type="date" class="form-control form-control-sm" id="f-mgtm_ac_q3">
+              <div class="na-wrap"><input type="checkbox" class="form-check-input" id="f-mgtm_ac_q3_na" onchange="toggleNA('mgtm_ac_q3')"><label for="f-mgtm_ac_q3_na">N/A</label></div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label mb-1">Q4</label>
+            <div class="date-group">
+              <input type="date" class="form-control form-control-sm" id="f-mgtm_ac_q4">
+              <div class="na-wrap"><input type="checkbox" class="form-check-input" id="f-mgtm_ac_q4_na" onchange="toggleNA('mgtm_ac_q4')"><label for="f-mgtm_ac_q4_na">N/A</label></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sec-label sl-cb">Credit Bureau</div>
+        <div class="row g-2">
+          <div class="col-md-4">
+            <label class="form-label mb-1">AECB (Director)</label>
+            <select class="form-select form-select-sm" id="f-aecb_dir"></select>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label mb-1">AECB (Com)</label>
+            <div class="date-group">
+              <input type="date" class="form-control form-control-sm" id="f-aecb_com">
+              <div class="na-wrap"><input type="checkbox" class="form-check-input" id="f-aecb_com_na" onchange="toggleNA('aecb_com')"><label for="f-aecb_com_na">N/A</label></div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label mb-1">Cibil (Director)</label>
+            <input type="text" class="form-control form-control-sm" id="f-cibil_dir">
+          </div>
+        </div>
+
+        <div class="sec-label">Remarks</div>
+        <textarea class="form-control form-control-sm" id="f-remarks" rows="3" placeholder="Any notes…"></textarea>
+      </div>
+      <div class="modal-footer py-2 gap-2">
+        <button class="tb-btn tb-btn-outline" data-bs-dismiss="modal">Cancel</button>
+        <button class="tb-btn tb-btn-primary px-4" onclick="save()"><i class="bi bi-save"></i>Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete confirm -->
+<div class="modal fade" id="del-modal" tabindex="-1">
+  <div class="modal-dialog modal-sm modal-dialog-centered">
+    <div class="modal-content" style="border:none;border-radius:10px;overflow:hidden">
+      <div class="modal-body text-center py-4 px-4">
+        <div style="width:48px;height:48px;border-radius:50%;background:var(--red-lt);display:flex;align-items:center;justify-content:center;margin:0 auto 12px">
+          <i class="bi bi-trash" style="color:var(--red);font-size:20px"></i>
+        </div>
+        <p class="mb-1 fw-bold" style="font-size:14px">Delete this company?</p>
+        <p style="color:var(--t2);font-size:12.5px;margin-bottom:0" id="del-name"></p>
+      </div>
+      <div class="modal-footer justify-content-center border-0 pt-0 pb-4 gap-2">
+        <button class="tb-btn tb-btn-outline" data-bs-dismiss="modal">Cancel</button>
+        <button class="tb-btn" style="background:var(--red);color:#fff;border-color:var(--red)" id="del-confirm">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast-box">
+  <div id="toast" class="toast align-items-center text-white border-0" role="alert">
+    <div class="d-flex">
+      <div class="toast-body" id="toast-msg"></div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// ── List defaults ─────────────────────────────────────────────────────────────
+const LIST_DEFAULTS = {
+  staff:      [],
+  countries:  ['UAE','HK','India','UK','USA','Singapore'],
+  activities: ['GENERAL TRADING','MANUFACTURING','INFORMATION TECHNOLOGY','EVENT MANAGEMENT','TRADING & RECYCLING'],
+  ratings:    ['3A3','2A3','3A2','2A2','EE3','NA'],
+  aecb:       ['Y','N'],
+};
+
+const LIST_META = {
+  staff:      { label:'Staff / Responsible Persons', icon:'bi-people',       hint:'Used in all "Processed By" and "Prepared By" dropdowns.' },
+  countries:  { label:'Countries',                   icon:'bi-globe',        hint:'Options for the Country field.' },
+  activities: { label:'Activities',                  icon:'bi-briefcase',    hint:'Options for the Activity field.' },
+  ratings:    { label:'D&B Ratings',                 icon:'bi-bar-chart',    hint:'Options for the D&B Rating field.' },
+  aecb:       { label:'AECB Dir Options',            icon:'bi-toggle-on',    hint:'Options for the AECB (Director) field.' },
+};
+
+function getList(key) {
+  const s = localStorage.getItem('mis-' + key);
+  return s !== null ? JSON.parse(s) : [...LIST_DEFAULTS[key]];
+}
+function setList(key, arr) {
+  localStorage.setItem('mis-' + key, JSON.stringify(arr));
+  fetch('/api/settings', {
+    method: 'PUT',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ [key]: JSON.stringify(arr) })
+  });
+}
+
+async function loadSMTP() {
+  try {
+    const res = await fetch('/api/settings');
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data.smtp_email) document.getElementById('smtp-email').value = data.smtp_email;
+  } catch(e) {}
+}
+
+async function saveSMTP() {
+  const email = document.getElementById('smtp-email').value.trim();
+  const password = document.getElementById('smtp-password').value;
+  const msg = document.getElementById('smtp-msg');
+  msg.textContent = '';
+  if (!email) { msg.style.color = 'var(--red)'; msg.textContent = 'Email address is required.'; return; }
+  const body = { smtp_email: email };
+  if (password) body.smtp_password = password;
+  try {
+    const res = await fetch('/api/settings', { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+    if (res.ok) {
+      msg.style.color = 'var(--green)'; msg.textContent = 'SMTP settings saved.';
+      document.getElementById('smtp-password').value = '';
+      setTimeout(() => msg.textContent = '', 3000);
+    } else { msg.style.color = 'var(--red)'; msg.textContent = 'Save failed.'; }
+  } catch(e) { msg.style.color = 'var(--red)'; msg.textContent = 'Network error.'; }
+}
+
+function toggleSidebar() {
+  const sb = document.querySelector('.sidebar');
+  const ov = document.getElementById('sb-overlay');
+  const open = sb.classList.toggle('sb-open');
+  ov.classList.toggle('show', open);
+}
+function closeSidebar() {
+  document.querySelector('.sidebar').classList.remove('sb-open');
+  document.getElementById('sb-overlay').classList.remove('show');
+}
+
+function doBackup() {
+  window.location.href = '/api/backup';
+}
+
+function previewRestore(input) {
+  const file = input.files[0];
+  const btn = document.getElementById('restore-btn');
+  const label = document.getElementById('restore-filename');
+  const msg = document.getElementById('restore-msg');
+  msg.textContent = '';
+  if (file) {
+    label.textContent = file.name;
+    btn.style.display = '';
+  } else {
+    label.textContent = 'No file selected';
+    btn.style.display = 'none';
+  }
+}
+
+async function doRestore() {
+  const file = document.getElementById('restore-file').files[0];
+  const msg = document.getElementById('restore-msg');
+  if (!file) return;
+  if (!confirm('This will OVERWRITE all current data with the backup. Are you sure?')) return;
+  msg.style.color = 'var(--t2)'; msg.textContent = 'Restoring…';
+  const form = new FormData();
+  form.append('backup', file);
+  try {
+    const res = await fetch('/api/restore', { method: 'POST', body: form });
+    const data = await res.json();
+    if (data.ok) {
+      msg.style.color = 'var(--green)';
+      msg.textContent = 'Restore complete. Reloading…';
+      setTimeout(() => window.location.reload(), 1500);
+    } else {
+      msg.style.color = 'var(--red)';
+      msg.textContent = data.error || 'Restore failed.';
+    }
+  } catch(e) {
+    msg.style.color = 'var(--red)'; msg.textContent = 'Network error.';
+  }
+}
+
+async function loadSettingsFromDB() {
+  try {
+    const res = await fetch('/api/settings');
+    if (!res.ok) return;
+    const data = await res.json();
+    const toUpload = {};
+    let changed = false;
+    Object.keys(LIST_META).forEach(key => {
+      if (data[key] !== undefined) {
+        // DB has data — authoritative, write to localStorage
+        localStorage.setItem('mis-' + key, data[key]);
+        changed = true;
+      } else {
+        // DB missing this key — upload whatever localStorage has (seeding)
+        const local = localStorage.getItem('mis-' + key);
+        if (local) toUpload[key] = local;
+      }
+    });
+    if (Object.keys(toUpload).length) {
+      fetch('/api/settings', {
+        method: 'PUT',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(toUpload)
+      });
+    }
+    if (changed) { renderAllEditors(); refreshSelects(); }
+  } catch(e) {}
+}
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let ALL = [];
+let _knownVersion = null;
+let activeFilters = { cat:'', country:'', q:'' };
+let misView = 'list';
+let currentCompanyId = null;
+let sortCol = null;
+let sortDir = 1;
+let selAnchor = null;
+let selEnd = null;
+let lastFlatRows = [];
+let rangeSortCol = null;
+let rangeSortDir = 1;
+let pendingDeleteId  = null;
+let pendingDeleteCb  = null;
+
+// ── Bootstrap helpers ─────────────────────────────────────────────────────────
+const bsModal    = () => bootstrap.Modal.getOrCreateInstance(document.getElementById('modal'));
+const bsDelModal = () => bootstrap.Modal.getOrCreateInstance(document.getElementById('del-modal'));
+const bsToast    = () => bootstrap.Toast.getOrCreateInstance(document.getElementById('toast'), { delay:2500 });
+
+// ── Date field helpers ────────────────────────────────────────────────────────
+const DATE_FIELDS = ['dnb_rep_validity','audit_rep','mgtm_ac_q1','mgtm_ac_q2','mgtm_ac_q3','mgtm_ac_q4','aecb_com'];
+
+function toInputDate(val) {
+  if (!val) return '';
+  const m = val.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})$/);
+  if (m) return `${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(val)) return val;
+  return '';
+}
+function fromInputDate(val) {
+  if (!val) return null;
+  const [y,m,d] = val.split('-');
+  return `${d}-${m}-${y}`;
+}
+
+function toggleNA(field) {
+  const cb  = document.getElementById(`f-${field}_na`);
+  const inp = document.getElementById(`f-${field}`);
+  inp.disabled = cb.checked;
+  if (cb.checked) inp.value = '';
+}
+
+function loadDateField(field, val) {
+  const cb  = document.getElementById(`f-${field}_na`);
+  const inp = document.getElementById(`f-${field}`);
+  if (val && val.toUpperCase() === 'NA') {
+    cb.checked = true; inp.disabled = true; inp.value = '';
+  } else {
+    cb.checked = false; inp.disabled = false;
+    inp.value = val ? toInputDate(val) : '';
+  }
+}
+function readDateField(field) {
+  const cb = document.getElementById(`f-${field}_na`);
+  if (cb.checked) return 'NA';
+  const v = document.getElementById(`f-${field}`).value;
+  return v ? fromInputDate(v) : null;
+}
+
+// ── Select helpers ────────────────────────────────────────────────────────────
+function populateSelect(id, items, allowEmpty) {
+  const sel = document.getElementById(id);
+  if (!sel) return;
+  const cur = sel.value;
+  sel.innerHTML = allowEmpty ? '<option value="">—</option>' : '';
+  items.forEach(item => {
+    const o = document.createElement('option');
+    o.value = item; o.textContent = item;
+    sel.appendChild(o);
+  });
+  if (cur) sel.value = cur;
+}
+
+function ensureOption(selEl, val) {
+  if (!val) return;
+  if (![...selEl.options].some(o => o.value === val)) {
+    const o = document.createElement('option');
+    o.value = val; o.textContent = val;
+    selEl.appendChild(o);
+  }
+}
+
+function refreshSelects() {
+  populateSelect('f-country',            getList('countries'), true);
+  populateSelect('f-activity',           getList('activities'), true);
+  populateSelect('f-dnb_rating',         getList('ratings'), true);
+  populateSelect('f-aecb_dir',           getList('aecb'), true);
+  populateSelect('f-dnb_processed_by',   getList('staff'), true);
+  populateSelect('f-audit_processed_by', getList('staff'), true);
+  populateSelect('f-audit_prepared_by',  getList('staff'), true);
+}
+
+// ── Settings list editors ─────────────────────────────────────────────────────
+function renderListEditor(key) {
+  const meta  = LIST_META[key];
+  const items = getList(key);
+  const container = document.getElementById('sc-' + key);
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="settings-card h-100">
+      <h3><i class="bi ${meta.icon}"></i>${meta.label}</h3>
+      <p class="hint-text">${meta.hint}</p>
+      <div class="d-flex gap-2 mb-3">
+        <input type="text" class="form-control form-control-sm" id="inp-${key}"
+               placeholder="Add new entry…" style="max-width:220px"
+               onkeydown="if(event.key==='Enter')addToList('${key}')">
+        <button class="tb-btn tb-btn-primary" onclick="addToList('${key}')">
+          <i class="bi bi-plus-lg"></i>Add
+        </button>
+      </div>
+      <div id="list-${key}" class="d-flex flex-wrap gap-2">
+        ${items.map((item,i) => listBadge(key, item, i)).join('')}
+      </div>
+    </div>`;
+}
+
+function listBadge(key, item, i) {
+  return `<span class="tag-chip">
+    ${esc(item)}
+    <button type="button" class="btn-close" style="font-size:8px" title="Remove"
+            onclick="removeFromList('${key}',${i})"></button>
+  </span>`;
+}
+
+function addToList(key) {
+  const inp = document.getElementById(`inp-${key}`);
+  const val = inp.value.trim();
+  if (!val) return;
+  const list = getList(key);
+  if (!list.includes(val)) { list.push(val); setList(key, list); }
+  inp.value = '';
+  renderListEditor(key);
+  refreshSelects();
+}
+
+function removeFromList(key, i) {
+  const list = getList(key);
+  list.splice(i, 1);
+  setList(key, list);
+  renderListEditor(key);
+  refreshSelects();
+}
+
+function renderAllEditors() {
+  Object.keys(LIST_META).forEach(renderListEditor);
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+document.getElementById('date-label').textContent =
+  new Date().toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
+
+document.getElementById('sidebar-nav').addEventListener('click', e => {
+  const li = e.target.closest('li[data-view]');
+  if (li) navTo(li.dataset.view);
+});
+
+function _applyView(view) {
+  const sideView = view === 'company' ? 'mis' : view;
+  document.querySelectorAll('#sidebar-nav li').forEach(li =>
+    li.classList.toggle('active', li.dataset.view === sideView));
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  const el = document.getElementById('view-' + view);
+  if (el) el.classList.add('active');
+}
+
+function navTo(view) {
+  if (!userCanEdit && (view === 'settings' || view === 'users' || view === 'logs')) return;
+  closeSidebar();
+  _applyView(view);
+  const hash = view === 'company' && currentCompanyId ? 'company/' + currentCompanyId : view;
+  if (location.hash.slice(1) !== hash) history.pushState(null, '', '#' + hash);
+}
+
+function handleHash() {
+  const hash = location.hash.slice(1) || 'dashboard';
+  if (hash.startsWith('company/')) {
+    const id = parseInt(hash.split('/')[1]);
+    if (!isNaN(id)) {
+      currentCompanyId = id;
+      _applyView('company');
+      const c = ALL.find(x => x.id === id);
+      if (c) renderDetail(c);
+    }
+  } else if (['dashboard', 'mis', 'settings', 'users', 'logs'].includes(hash)) {
+    if (!userCanEdit && (hash === 'settings' || hash === 'users' || hash === 'logs')) {
+      history.replaceState(null, '', '#dashboard');
+      _applyView('dashboard');
+    } else {
+      _applyView(hash);
+      if (hash === 'users') loadUsers();
+      if (hash === 'logs') loadLogs();
+    }
+  }
+}
+
+// ── User management ───────────────────────────────────────────────────────────
+async function loadUsers() {
+  const res = await fetch('/api/admin/users');
+  if (!res.ok) return;
+  const users = await res.json();
+  const pending = users.filter(u => !u.approved).length;
+  const badge = document.getElementById('pending-badge');
+  badge.textContent = pending;
+  badge.style.display = pending ? 'inline-flex' : 'none';
+
+  const ROLE_LABELS = { superadmin: 'Super Admin', admin: 'Admin', user: 'User' };
+  const isSuperAdmin = currentUserRole === 'superadmin';
+  const staffNames = [...new Set([
+    ...getList('staff'),
+    ...ALL.map(c => c.dnb_processed_by).filter(Boolean),
+    ...ALL.map(c => c.audit_processed_by).filter(Boolean),
+    ...ALL.map(c => c.audit_prepared_by).filter(Boolean),
+  ])].sort();
+
+  const roleSelect = (u) => {
+    if (!isSuperAdmin || u.role === 'superadmin') {
+      return `<span class="role-badge rb-${u.role}">${ROLE_LABELS[u.role] || u.role}</span>`;
+    }
+    return `<select class="tb-select" style="height:26px;font-size:11px;padding:0 6px" onchange="setUserRole(${u.id},this.value)">
+      <option value="user"  ${u.role==='user'  ?'selected':''}>User</option>
+      <option value="admin" ${u.role==='admin' ?'selected':''}>Admin</option>
+      <option value="superadmin" ${u.role==='superadmin'?'selected':''}>Super Admin</option>
+    </select>`;
+  };
+
+  const linkedSelect = (u) => {
+    const canLink = isSuperAdmin || u.id === myUserId;
+    if (!canLink) return `<span style="color:var(--t2);font-size:.78rem">${esc(u.linked_name||'—')}</span>`;
+    const opts = ['', ...staffNames].map(n =>
+      `<option value="${esc(n)}" ${u.linked_name===n?'selected':''}>${n||'— none —'}</option>`
+    ).join('');
+    return `<select class="tb-select" style="height:26px;font-size:11px;padding:0 6px;max-width:130px"
+      onchange="updateUser(${u.id},{linked_name:this.value})">${opts}</select>`;
+  };
+
+  document.getElementById('um-tbody').innerHTML = users.map(u => {
+    const joined = fmtLocalDate(u.created_at);
+    const canRename = isSuperAdmin || u.id === myUserId;
+    const nameCell = `<span style="font-weight:600">${esc(u.name)}</span>${canRename
+      ? `<button class="btn-icon ms-1" title="Rename" onclick="renameUser(${u.id},'${esc(u.name).replace(/'/g,"\\'")}')"><i class="bi bi-pencil-fill" style="font-size:10px;color:var(--t3)"></i></button>`
+      : ''}`;
+    const actions = u.role === 'superadmin' ? '<span style="color:var(--t3);font-size:.75rem">—</span>' :
+      (!u.approved
+        ? `<button class="tb-btn tb-btn-primary" style="height:26px;font-size:11px" onclick="approveUser(${u.id})"><i class="bi bi-check-lg"></i>Approve</button>`
+          + (isSuperAdmin ? `<button class="tb-btn" style="height:26px;font-size:11px;background:var(--red-lt);color:var(--red);border:none;margin-left:4px" onclick="rejectUser(${u.id})"><i class="bi bi-x-lg"></i>Reject</button>` : '')
+        : (isSuperAdmin ? `<button class="tb-btn tb-btn-outline" style="height:26px;font-size:11px" onclick="rejectUser(${u.id})"><i class="bi bi-trash"></i>Remove</button>` : '<span style="color:var(--t3);font-size:.75rem">—</span>'));
+    return `<tr>
+      <td>${nameCell}</td>
+      <td class="um-col-email" style="color:var(--t2)">${esc(u.email)}</td>
+      <td>${roleSelect(u)}</td>
+      <td class="um-col-link">${linkedSelect(u)}</td>
+      <td class="um-col-status"><span class="status-pill ${u.approved?'sp-approved':'sp-pending'}">${u.approved?'Approved':'Pending'}</span></td>
+      <td class="um-col-joined" style="color:var(--t2);font-size:.75rem">${joined}</td>
+      <td>${actions}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── Notifications ─────────────────────────────────────────────────────────────
+function renderNotifications() {
+  if (!myLinkedName) return;
+  document.getElementById('notif-wrap').style.display = '';
+  const now = new Date();
+  const items = [];
+  ALL.forEach(c => {
+    const checks = [
+      { label: 'D&B Report', date: c.dnb_rep_validity,  person: c.dnb_processed_by },
+      { label: 'Audit Report', date: c.audit_rep,        person: c.audit_processed_by },
+    ];
+    checks.forEach(({ label, date, person }) => {
+      if (!person || person !== myLinkedName) return;
+      const d = parseDate(date);
+      if (!d) return;
+      const diff = Math.ceil((d - now) / 864e5);
+      if (diff <= 30) items.push({ co: c.company_name, label, date, diff, id: c.id });
+    });
+  });
+  items.sort((a, b) => a.diff - b.diff);
+  const badge = document.getElementById('notif-badge');
+  badge.textContent = items.length;
+  badge.style.display = items.length ? 'flex' : 'none';
+  document.getElementById('notif-list').innerHTML = !items.length
+    ? `<div class="notif-empty"><i class="bi bi-check-circle-fill text-success me-1"></i>All clear — nothing due</div>`
+    : items.map(it => {
+        const cls = it.diff < 0 ? 'overdue' : 'soon';
+        const when = it.diff < 0 ? `Overdue by ${Math.abs(it.diff)} day${Math.abs(it.diff)!==1?'s':''}` : it.diff === 0 ? 'Due today' : `Due in ${it.diff} day${it.diff!==1?'s':''}`;
+        return `<div class="notif-item ${cls}" onclick="navTo('mis');openDetail(${it.id})" style="cursor:pointer">
+          <div class="notif-co">${esc(it.co)}</div>
+          <div class="notif-det"><strong>${it.label}</strong> · ${esc(it.date)} · <strong style="color:${it.diff<0?'var(--red)':'#d97706'}">${when}</strong></div>
+        </div>`;
+      }).join('');
+}
+
+function toggleNotifPanel() {
+  const panel = document.getElementById('notif-panel');
+  panel.classList.toggle('open');
+}
+document.addEventListener('click', e => {
+  if (!document.getElementById('notif-wrap')?.contains(e.target)) {
+    document.getElementById('notif-panel')?.classList.remove('open');
+  }
+});
+
+// ── Logs ──────────────────────────────────────────────────────────────────────
+const ACTION_ICONS = {
+  'Login':'bi-box-arrow-in-right', 'Logout':'bi-box-arrow-left',
+  'Company Added':'bi-plus-circle', 'Company Updated':'bi-pencil',
+  'Company Deleted':'bi-trash', 'User Approved':'bi-check-circle',
+  'User Removed':'bi-x-circle', 'User Renamed':'bi-person-fill',
+  'Role Changed':'bi-shield-fill', 'Staff Name Linked':'bi-link-45deg',
+  'Logs Cleared':'bi-trash-fill',
+};
+async function loadLogs() {
+  const res = await fetch('/api/logs');
+  if (!res.ok) return;
+  const logs = await res.json();
+  const isSA = currentUserRole === 'superadmin';
+  document.getElementById('btn-clear-logs').style.display = isSA ? '' : 'none';
+  document.getElementById('log-del-col').style.display = isSA ? '' : 'none';
+  document.getElementById('log-tbody').innerHTML = !logs.length
+    ? `<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--t3)">No logs yet</td></tr>`
+    : logs.map(l => {
+        const dt = fmtLocalDateTime(l.created_at);
+        const icon = ACTION_ICONS[l.action] || 'bi-dot';
+        const delBtn = isSA ? `<button class="btn-icon" onclick="deleteLog(${l.id})" title="Delete"><i class="bi bi-x" style="color:var(--t3)"></i></button>` : '';
+        return `<tr>
+          <td style="color:var(--t2);font-size:.75rem;white-space:nowrap">${dt}</td>
+          <td style="font-weight:600">${esc(l.user_name||'—')}</td>
+          <td><span class="role-badge rb-${l.user_role||'user'}">${l.user_role||'—'}</span></td>
+          <td><i class="bi ${icon} me-1" style="color:var(--accent)"></i>${esc(l.action)}</td>
+          <td style="color:var(--t2)">${esc(l.details||'')}</td>
+          <td>${delBtn}</td>
+        </tr>`;
+      }).join('');
+}
+async function clearLogs() {
+  if (!confirm('Clear ALL logs permanently?')) return;
+  const res = await fetch('/api/logs', {method:'DELETE'});
+  if (res.ok) { toast('Logs cleared'); loadLogs(); }
+}
+async function deleteLog(id) {
+  const res = await fetch(`/api/logs/${id}`, {method:'DELETE'});
+  if (res.ok) loadLogs();
+}
+
+async function updateUser(id, data) {
+  const res = await fetch(`/api/admin/users/${id}`, {
+    method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data)
+  });
+  if (!res.ok) { const d = await res.json(); toast(d.error || 'Error', 'danger'); loadUsers(); return; }
+  if (data.name) toast('Name updated');
+  if ('linked_name' in data) {
+    toast('Staff name linked');
+    if (id === myUserId) { myLinkedName = data.linked_name || ''; renderNotifications(); }
+  }
+  loadUsers();
+}
+
+async function renameUser(id, currentName) {
+  const newName = prompt('New display name:', currentName);
+  if (!newName || newName.trim() === currentName) return;
+  updateUser(id, {name: newName.trim()});
+}
+
+async function approveUser(id) {
+  const res = await fetch(`/api/admin/users/${id}/approve`, {method:'POST'});
+  if (res.ok) { toast('User approved'); loadUsers(); }
+  else { const d = await res.json(); toast(d.error || 'Error', 'danger'); }
+}
+
+async function rejectUser(id) {
+  if (!confirm('Remove this user? This cannot be undone.')) return;
+  const res = await fetch(`/api/admin/users/${id}/reject`, {method:'POST'});
+  if (res.ok) { toast('User removed'); loadUsers(); }
+  else { const d = await res.json(); toast(d.error || 'Error', 'danger'); }
+}
+
+async function setUserRole(id, role) {
+  const res = await fetch(`/api/admin/users/${id}/role`, {
+    method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({role})
+  });
+  if (res.ok) { toast('Role updated'); loadUsers(); }
+  else { const d = await res.json(); toast(d.error || 'Error', 'danger'); loadUsers(); }
+}
+
+// ── Data ──────────────────────────────────────────────────────────────────────
+async function load() {
+  const res = await fetch('/api/companies');
+  ALL = await res.json();
+  rebuildCountryFilter();
+  render();
+  renderDashboard();
+  handleHash();
+}
+
+function _activeView() {
+  const el = document.querySelector('.view.active');
+  return el ? el.id.replace('view-', '') : 'dashboard';
+}
+
+async function _refreshData() {
+  try {
+    const res = await fetch('/api/companies');
+    if (!res.ok) return;
+    ALL = await res.json();
+    rebuildCountryFilter();
+    render();
+    renderDashboard();
+    renderNotifications();
+    const v = _activeView();
+    if (v === 'logs') loadLogs();
+    if (v === 'users') loadUsers();
+  } catch(e) {}
+}
+
+async function _pollVersion() {
+  try {
+    const res = await fetch('/api/version');
+    if (!res.ok) return;
+    const { v } = await res.json();
+    if (_knownVersion === null) { _knownVersion = v; return; }
+    if (v !== _knownVersion) { _knownVersion = v; await _refreshData(); }
+  } catch(e) {}
+}
+
+setInterval(_pollVersion, 5000);
+
+// ── MIS view toggle ───────────────────────────────────────────────────────────
+function setMisView(v) {
+  misView = v;
+  document.getElementById('btn-lv').classList.toggle('active', v === 'list');
+  document.getElementById('btn-gv').classList.toggle('active', v === 'grid');
+  document.getElementById('view-mis').classList.toggle('grid-mode', v === 'grid');
+  render();
+}
+
+// ── Range selection ───────────────────────────────────────────────────────────
+function srClick(id, event) {
+  const idx = lastFlatRows.findIndex(r => r.id === id);
+  if (idx === -1) return;
+  if (!event.shiftKey || selAnchor === null) {
+    selAnchor = idx; selEnd = idx;
+  } else {
+    selEnd = idx;
+  }
+  updateSelHighlight();
+  updateSelBadge();
+}
+
+function updateSelHighlight() {
+  document.querySelectorAll('table.mis tbody tr').forEach(tr => tr.classList.remove('row-sel'));
+  if (selAnchor === null) return;
+  const lo = Math.min(selAnchor, selEnd);
+  const hi = Math.max(selAnchor, selEnd);
+  for (let i = lo; i <= hi; i++) {
+    const r = lastFlatRows[i];
+    if (!r) continue;
+    const tr = document.querySelector(`table.mis tbody tr[data-rid="${r.id}"]`);
+    if (tr) tr.classList.add('row-sel');
+  }
+}
+
+function updateSelBadge() {
+  const badge = document.getElementById('sel-badge');
+  if (selAnchor === null) { badge.classList.remove('on'); return; }
+  const n = Math.abs(selEnd - selAnchor) + 1;
+  document.getElementById('sel-count').textContent = n + ' row' + (n !== 1 ? 's' : '');
+  badge.classList.add('on');
+}
+
+function clearSel() {
+  selAnchor = selEnd = null;
+  rangeSortCol = null; rangeSortDir = 1;
+  document.querySelectorAll('table.mis thead th').forEach(h => h.classList.remove('rsort-asc','rsort-desc'));
+  updateSelHighlight();
+  updateSelBadge();
+}
+
+// ── Sort ──────────────────────────────────────────────────────────────────────
+const DATE_SF = new Set(['dnb_rep_validity','audit_rep','mgtm_ac_q1','mgtm_ac_q2','mgtm_ac_q3','mgtm_ac_q4','aecb_com']);
+
+function sortRows(rows) {
+  if (!sortCol) return rows;
+  return [...rows].sort((a, b) => {
+    let va = a[sortCol], vb = b[sortCol];
+    if (DATE_SF.has(sortCol)) {
+      va = parseDate(va); vb = parseDate(vb);
+      if (!va && !vb) return 0;
+      if (!va) return 1;
+      if (!vb) return -1;
+      return (va - vb) * sortDir;
+    }
+    if (sortCol === 'sr_no') return ((+va||0) - (+vb||0)) * sortDir;
+    va = (va||'').toLowerCase(); vb = (vb||'').toLowerCase();
+    if (!va && !vb) return 0;
+    if (!va) return 1;
+    if (!vb) return -1;
+    return va.localeCompare(vb) * sortDir;
+  });
+}
+
+// ── Render ────────────────────────────────────────────────────────────────────
+function render() {
+  const rows = sortRows(applyFilters(ALL));
+  document.getElementById('count-badge').textContent =
+    rows.length + ' record' + (rows.length !== 1 ? 's' : '');
+  if (misView === 'list') renderList(rows);
+  else renderGrid(rows);
+}
+
+function applyFilters(rows) {
+  if (activeFilters.cat)     rows = rows.filter(c => c.cat === activeFilters.cat);
+  if (activeFilters.country) rows = rows.filter(c => c.country === activeFilters.country);
+  if (activeFilters.q) {
+    const q = activeFilters.q.toLowerCase();
+    rows = rows.filter(c =>
+      (c.company_name||'').toLowerCase().includes(q) ||
+      (c.activity    ||'').toLowerCase().includes(q) ||
+      (c.remarks     ||'').toLowerCase().includes(q) ||
+      (c.country     ||'').toLowerCase().includes(q)
+    );
+  }
+  return rows;
+}
+
+function fixStickyOffsets() {
+  const th1 = document.querySelector('thead .sc1');
+  const th2 = document.querySelector('thead .sc2');
+  if (!th1 || !th2) return;
+  const w1 = th1.getBoundingClientRect().width;
+  const w2 = th2.getBoundingClientRect().width;
+  const left2 = Math.ceil(w1) + 'px';
+  const left3 = Math.ceil(w1 + w2) + 'px';
+  document.querySelectorAll('.sc2').forEach(el => el.style.left = left2);
+  document.querySelectorAll('.sc3').forEach(el => el.style.left = left3);
+}
+
+function rowHTML(c) {
+  return `
+  <tr data-rid="${c.id}" onclick="openDetail(${c.id})">
+    <td class="sc1 sel-handle text-center" style="color:var(--t3)" onclick="event.stopPropagation();srClick(${c.id},event)">${c.sr_no}</td>
+    <td class="sc2 text-center">${catBadge(c.cat)}</td>
+    <td class="sc3 co-name">${esc(c.company_name)}</td>
+    <td style="color:var(--t2)">${esc(c.activity)}</td>
+    <td class="text-center fw-semibold" style="font-size:11px">${esc(c.country)}</td>
+    <td class="text-center">${fmtDate(c.dnb_rep_validity)}</td>
+    <td class="text-center fw-semibold">${c.dnb_rating ? esc(c.dnb_rating) : dash()}</td>
+    <td class="text-center" style="color:var(--t2)">${c.dnb_processed_by ? esc(c.dnb_processed_by) : dash()}</td>
+    <td class="text-center">${fmtDate(c.audit_rep)}</td>
+    <td class="text-center" style="color:var(--t2)">${c.audit_processed_by ? esc(c.audit_processed_by) : dash()}</td>
+    <td class="text-center" style="color:var(--t2)">${c.audit_prepared_by ? esc(c.audit_prepared_by) : dash()}</td>
+    <td class="text-center">${fmtDate(c.mgtm_ac_q1)}</td>
+    <td class="text-center">${fmtDate(c.mgtm_ac_q2)}</td>
+    <td class="text-center">${fmtDate(c.mgtm_ac_q3)}</td>
+    <td class="text-center">${fmtDate(c.mgtm_ac_q4)}</td>
+    <td class="text-center">${fmtAecbDir(c.aecb_dir)}</td>
+    <td class="text-center">${fmtDate(c.aecb_com)}</td>
+    <td class="text-center" style="color:var(--t2)">${c.cibil_dir ? esc(c.cibil_dir) : dash()}</td>
+    <td style="color:var(--t2);font-size:11.5px">${esc(c.remarks)}</td>
+    ${userCanEdit ? `<td class="text-center" onclick="event.stopPropagation()">
+      <button class="btn btn-outline-secondary btn-act me-1" style="font-size:11px;padding:2px 6px;border-color:var(--border)" onclick="openEdit(${c.id})" title="Edit"><i class="bi bi-pencil-fill"></i></button>
+      <button class="btn btn-act" style="font-size:11px;padding:2px 6px;background:var(--red-lt);color:var(--red);border:1px solid transparent" onclick="confirmDelete(${c.id})" title="Delete"><i class="bi bi-trash-fill"></i></button>
+    </td>` : ''}
+  </tr>`;
+}
+
+function sepRow(label) {
+  return `<tr class="country-sep-row"><td colspan="20">${esc(label)}</td></tr>`;
+}
+
+function renderList(rows) {
+  const tbody = document.getElementById('tbody');
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="20" class="text-center py-5" style="color:var(--t3)">
+      <i class="bi bi-inbox me-2"></i>No records match.</td></tr>`;
+    requestAnimationFrame(fixStickyOffsets);
+    return;
+  }
+
+  if (sortCol) {
+    lastFlatRows = rows;
+    tbody.innerHTML = rows.map(rowHTML).join('');
+    clearSel();
+    requestAnimationFrame(fixStickyOffsets);
+    return;
+  }
+
+  const HK = r => ['HK','HONG KONG'].includes((r.country||'').trim().toUpperCase());
+  const uae    = rows.filter(r => (r.country||'').trim().toUpperCase() === 'UAE');
+  const hk     = rows.filter(r => HK(r));
+  const others = rows.filter(r => (r.country||'').trim().toUpperCase() !== 'UAE' && !HK(r));
+
+  const byCountry = {};
+  others.forEach(r => { const k = r.country||''; (byCountry[k]=byCountry[k]||[]).push(r); });
+  const othersSorted = [];
+  Object.keys(byCountry).sort().forEach(ct => byCountry[ct].forEach(r => othersSorted.push(r)));
+  lastFlatRows = [...uae, ...othersSorted, ...hk];
+
+  let html = uae.map(rowHTML).join('');
+  if (others.length) {
+    Object.keys(byCountry).sort().forEach(ct => {
+      html += sepRow(ct) + byCountry[ct].map(rowHTML).join('');
+    });
+  }
+  if (hk.length) html += sepRow('Hong Kong') + hk.map(rowHTML).join('');
+
+  tbody.innerHTML = html;
+  clearSel();
+  requestAnimationFrame(fixStickyOffsets);
+}
+
+function renderGrid(rows) {
+  const el = document.getElementById('grid-content');
+  if (!rows.length) {
+    el.innerHTML = `<div class="text-center py-5" style="color:var(--t3)"><i class="bi bi-inbox" style="font-size:2rem;display:block;margin-bottom:10px"></i>No records match.</div>`;
+    return;
+  }
+  const groups = {};
+  rows.forEach(c => {
+    const ct = (c.country || 'UAE').trim();
+    (groups[ct] = groups[ct] || []).push(c);
+  });
+  const order = ['UAE', ...Object.keys(groups).filter(k => k !== 'UAE').sort()];
+  el.innerHTML = order.filter(ct => groups[ct]).map(ct => `
+    <div class="country-hdr">${esc(ct)} <span class="fw-normal">(${groups[ct].length})</span></div>
+    <div class="row row-cols-2 row-cols-md-3 row-cols-xl-4 g-3 mb-1">
+      ${groups[ct].map(c => `
+      <div class="col">
+        <div class="co-card" onclick="openDetail(${c.id})">
+          <button class="card-del" onclick="event.stopPropagation();confirmDelete(${c.id})" title="Delete">
+            <i class="bi bi-trash-fill"></i>
+          </button>
+          <div class="cc-top">${c.cat ? `<span class="cat-badge cat-${esc(c.cat)}">${esc(c.cat)}</span>` : ''}${esc(c.cat||'—')}</div>
+          <div class="cc-name">${esc(c.company_name)}</div>
+          ${c.activity ? `<div class="cc-act">${esc(c.activity)}</div>` : ''}
+          <div class="cc-pills">${statusPill(c.dnb_rep_validity,'D&B')}${statusPill(c.audit_rep,'Audit')}</div>
+        </div>
+      </div>`).join('')}
+    </div>`).join('');
+}
+
+function statusPill(val, label) {
+  const d = parseDate(val);
+  if (!d) return '';
+  const diff = (d - new Date()) / 864e5;
+  if (diff < 0)  return `<span class="spill spill-exp">${label} Expired</span>`;
+  if (diff < 30) return `<span class="spill spill-soon">${label} Soon</span>`;
+  return `<span class="spill spill-ok">${label} OK</span>`;
+}
+
+// ── Dashboard ─────────────────────────────────────────────────────────────────
+function switchAlertTab(id, btn) {
+  document.querySelectorAll('.alert-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.alert-tab-pane').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('alerts-' + id).classList.add('active');
+}
+
+function renderDashboard() {
+  const now = new Date();
+  let expired = 0, soon = 0, ok = 0;
+  const dnbAlerts = [], auditAlerts = [], mgtmAlerts = [];
+
+  ALL.forEach(c => {
+    const expiryChecks = [
+      { d: parseDate(c.dnb_rep_validity),  bucket: dnbAlerts,   person: c.dnb_processed_by,   dateStr: c.dnb_rep_validity },
+      { d: parseDate(c.audit_rep),         bucket: auditAlerts, person: c.audit_processed_by, dateStr: c.audit_rep },
+    ];
+    let hasIssue = false, hasOk = false;
+    expiryChecks.forEach(({ d, bucket, person, dateStr }) => {
+      if (!d) return;
+      const diff = (d - now) / 864e5;
+      if (diff < 0)       { bucket.push({ co: c.company_name, date: dateStr, type:'expired', person }); hasIssue = true; }
+      else if (diff < 30) { bucket.push({ co: c.company_name, date: dateStr, type:'soon',    person }); hasIssue = true; }
+      else hasOk = true;
+    });
+    if (hasIssue) {
+      if (expiryChecks.some(({ d }) => d && (d - now) / 864e5 < 0)) expired++; else soon++;
+    } else if (hasOk) ok++;
+
+    const quarters = [
+      { label: 'Q1', val: c.mgtm_ac_q1 },
+      { label: 'Q2', val: c.mgtm_ac_q2 },
+      { label: 'Q3', val: c.mgtm_ac_q3 },
+      { label: 'Q4', val: c.mgtm_ac_q4 },
+    ];
+    quarters.forEach(({ label, val }) => {
+      const d = parseDate(val);
+      if (!d) return;
+      const diff = (d - now) / 864e5;
+      if (diff >= 0 && diff <= 30) {
+        mgtmAlerts.push({ co: c.company_name, label, date: val, diff: Math.ceil(diff) });
+      }
+    });
+  });
+
+  document.getElementById('st-total').textContent   = ALL.length;
+  document.getElementById('st-expired').textContent = expired;
+  document.getElementById('st-soon').textContent    = soon;
+  document.getElementById('st-ok').textContent      = ok;
+
+  const expiryAlertHTML = items => {
+    if (!items.length) return `<div class="alert-empty"><i class="bi bi-check-circle text-success me-1"></i>No alerts — all clear</div>`;
+    const mine = items.filter(a => myLinkedName && a.person === myLinkedName);
+    const rest  = items.filter(a => !myLinkedName || a.person !== myLinkedName);
+    const renderItem = (a, ismine) => `
+      <div class="alert-item${ismine?' mine':''}">
+        <div class="alert-dot ${a.type}"></div>
+        <div>
+          <div class="ai-co">${esc(a.co)}${ismine?'<span class="mine-tag">YOUR TASK</span>':''}</div>
+          <div class="ai-det">${a.type==='expired'?'Expired':'Expiring'}: <strong>${esc(a.date)}</strong>${a.person?` · Responsible: <strong>${esc(a.person)}</strong>`:''}</div>
+        </div>
+      </div>`;
+    return [...mine.map(a => renderItem(a, true)), ...rest.map(a => renderItem(a, false))].join('');
+  };
+
+  const mgtmAlertHTML = items => {
+    items.sort((a, b) => a.diff - b.diff);
+    return !items.length
+      ? `<div class="alert-empty"><i class="bi bi-check-circle text-success me-1"></i>No reports due in the next 30 days</div>`
+      : items.map(a => `
+          <div class="alert-item">
+            <div class="alert-dot soon"></div>
+            <div>
+              <div class="ai-co">${esc(a.co)}</div>
+              <div class="ai-det">${esc(a.label)} due: <strong>${esc(a.date)}</strong> · <strong>${a.diff === 0 ? 'today' : `in ${a.diff} day${a.diff !== 1 ? 's' : ''}`}</strong></div>
+            </div>
+          </div>`).join('');
+  };
+
+  document.getElementById('alerts-dnb').innerHTML   = expiryAlertHTML(dnbAlerts);
+  document.getElementById('alerts-audit').innerHTML = expiryAlertHTML(auditAlerts);
+  document.getElementById('alerts-mgtm').innerHTML  = mgtmAlertHTML(mgtmAlerts);
+  renderNotifications();
+
+  // ── 60-day timeline ────────────────────────────────────────────────────────
+  const tlItems = [];
+  ALL.forEach(c => {
+    const checks = [
+      { val: c.dnb_rep_validity, label: 'D&B Report',   cls: 'tt-dnb'   },
+      { val: c.audit_rep,        label: 'Audit Report',  cls: 'tt-audit' },
+      { val: c.mgtm_ac_q1,      label: 'Mgtm Q1',       cls: 'tt-mgtm'  },
+      { val: c.mgtm_ac_q2,      label: 'Mgtm Q2',       cls: 'tt-mgtm'  },
+      { val: c.mgtm_ac_q3,      label: 'Mgtm Q3',       cls: 'tt-mgtm'  },
+      { val: c.mgtm_ac_q4,      label: 'Mgtm Q4',       cls: 'tt-mgtm'  },
+    ];
+    checks.forEach(({ val, label, cls }) => {
+      const d = parseDate(val);
+      if (!d) return;
+      const diff = Math.ceil((d - now) / 864e5);
+      if (diff <= 60) tlItems.push({ co: c.company_name, id: c.id, label, cls, d, diff, dateStr: val });
+    });
+  });
+  tlItems.sort((a, b) => a.d - b.d);
+
+  const tlEl = document.getElementById('tl-list');
+  if (!tlItems.length) {
+    tlEl.innerHTML = `<div class="alert-empty"><i class="bi bi-check-circle text-success me-1"></i>Nothing due in the next 60 days</div>`;
+  } else {
+    tlEl.innerHTML = tlItems.map(item => {
+      const urgCls = item.diff < 0 ? 'tl-overdue' : item.diff <= 14 ? 'tl-urgent' : 'tl-ok';
+      const dayCls = item.diff < 0 ? 'overdue' : item.diff <= 14 ? 'urgent' : 'ok';
+      const dayLbl = item.diff < 0
+        ? `${Math.abs(item.diff)}d overdue`
+        : item.diff === 0 ? 'Today'
+        : item.diff === 1 ? 'Tomorrow'
+        : `in ${item.diff}d`;
+      const fmt = item.d.toLocaleDateString('en-GB', { day:'2-digit', month:'short' });
+      return `<div class="tl-item ${urgCls}">
+        <span class="tl-date">${fmt}</span>
+        <span class="tl-co" onclick="openDetail(${item.id})">${esc(item.co)}</span>
+        <span class="tl-type ${item.cls}">${item.label}</span>
+        <span class="tl-days ${dayCls}">${dayLbl}</span>
+      </div>`;
+    }).join('');
+  }
+}
+
+// ── Company detail ────────────────────────────────────────────────────────────
+function openDetail(id) {
+  const c = ALL.find(x => x.id === id);
+  if (!c) return;
+  currentCompanyId = id;
+  renderDetail(c);
+  navTo('company');
+}
+
+function renderDetail(c) {
+  document.getElementById('detail-title').textContent  = c.company_name;
+  document.getElementById('btn-detail-edit').onclick   = () => openEdit(c.id);
+  document.getElementById('btn-detail-export').onclick = () => { window.location.href = `/export/${c.id}`; };
+  document.getElementById('btn-detail-delete').onclick = () => confirmDelete(c.id, () => navTo('mis'));
+
+  const sections = [
+    { title:'Company Details', cls:'dst-base',
+      fields:[{l:'Category',v:c.cat},{l:'Activity',v:c.activity},{l:'Country',v:c.country},{l:'Remarks',v:c.remarks}] },
+    { title:'D&B Details', cls:'dst-dnb',
+      fields:[{l:'D&B Expiry',v:c.dnb_rep_validity},{l:'D&B Rating',v:c.dnb_rating},{l:'Processed By',v:c.dnb_processed_by}] },
+    { title:'In-House Details', cls:'dst-mgtm',
+      fields:[{l:'1st Quarter',v:c.mgtm_ac_q1},{l:'2nd Quarter',v:c.mgtm_ac_q2},{l:'3rd Quarter',v:c.mgtm_ac_q3},{l:'4th Quarter',v:c.mgtm_ac_q4}] },
+    { title:'Audit Details', cls:'dst-audit',
+      fields:[{l:'Report Expiry',v:c.audit_rep},{l:'Auditor Name',v:c.audit_prepared_by},{l:'Processed By',v:c.audit_processed_by}] },
+  ];
+  document.getElementById('detail-content').innerHTML = sections.map(s => `
+    <div class="col-md-6 col-xl-3">
+      <div class="detail-card">
+        <div class="detail-sec-title ${s.cls}">${s.title}</div>
+        ${s.fields.map(f => `
+          <div class="df">
+            <div class="df-label">${f.l}</div>
+            <div class="df-value ${!f.v?'empty':''}">${f.v?esc(f.v):'—'}</div>
+          </div>`).join('')}
+      </div>
+    </div>`).join('');
+}
+
+// ── Filters ───────────────────────────────────────────────────────────────────
+document.getElementById('cat-btns').addEventListener('click', e => {
+  const btn = e.target.closest('button[data-cat]');
+  if (!btn) return;
+  document.querySelectorAll('#cat-btns button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  activeFilters.cat = btn.dataset.cat;
+  render();
+});
+document.getElementById('country-sel').addEventListener('change', e => { activeFilters.country = e.target.value; render(); });
+let searchTimer;
+document.getElementById('search-box').addEventListener('input', e => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => { activeFilters.q = e.target.value; render(); }, 200);
+});
+
+function rebuildCountryFilter() {
+  const countries = [...new Set(ALL.map(c => c.country).filter(Boolean))].sort();
+  const sel = document.getElementById('country-sel');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">All Countries</option>';
+  countries.forEach(ct => {
+    const o = document.createElement('option');
+    o.value = ct; o.textContent = ct;
+    if (ct === cur) o.selected = true;
+    sel.appendChild(o);
+  });
+}
+
+// ── Add / Edit ────────────────────────────────────────────────────────────────
+const FIELDS = [
+  'cat','company_name','activity','country',
+  'dnb_rep_validity','dnb_rating','dnb_processed_by',
+  'audit_rep','audit_processed_by','audit_prepared_by',
+  'mgtm_ac_q1','mgtm_ac_q2','mgtm_ac_q3','mgtm_ac_q4',
+  'aecb_dir','aecb_com','cibil_dir','remarks',
+];
+
+function openAdd() {
+  document.getElementById('modal-title').innerHTML = '<i class="bi bi-plus-circle me-2"></i>Add Company';
+  document.getElementById('f-id').value = '';
+  refreshSelects();
+  FIELDS.forEach(f => {
+    if (DATE_FIELDS.includes(f)) { loadDateField(f, ''); return; }
+    const el = document.getElementById('f-' + f);
+    if (!el) return;
+    el.value = f === 'country' ? (getList('countries')[0] || '') : f === 'aecb_dir' ? (getList('aecb')[1] || '') : '';
+  });
+  bsModal().show();
+}
+
+function openEdit(id) {
+  const c = ALL.find(x => x.id === id);
+  if (!c) return;
+  document.getElementById('modal-title').innerHTML = '<i class="bi bi-pencil me-2"></i>Edit Company';
+  document.getElementById('f-id').value = id;
+  refreshSelects();
+  FIELDS.forEach(f => {
+    if (DATE_FIELDS.includes(f)) { loadDateField(f, c[f] || ''); return; }
+    const el = document.getElementById('f-' + f);
+    if (!el) return;
+    const val = c[f] || '';
+    if (el.tagName === 'SELECT' && val) ensureOption(el, val);
+    el.value = val;
+  });
+  bsModal().show();
+}
+
+async function save() {
+  const nameEl = document.getElementById('f-company_name');
+  if (!nameEl.value.trim()) { nameEl.classList.add('is-invalid'); return; }
+  nameEl.classList.remove('is-invalid');
+
+  const id   = document.getElementById('f-id').value;
+  const body = {};
+  FIELDS.forEach(f => {
+    body[f] = DATE_FIELDS.includes(f)
+      ? readDateField(f)
+      : (document.getElementById('f-' + f)?.value.trim() || null);
+  });
+
+  const res = await fetch(id ? `/api/companies/${id}` : '/api/companies', {
+    method: id ? 'PUT' : 'POST',
+    headers: { 'Content-Type':'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (res.ok) {
+    bsModal().hide();
+    toast(id ? 'Company updated.' : 'Company added.', 'success');
+    load();
+  } else {
+    toast('Error saving. Please try again.', 'danger');
+  }
+}
+
+// ── Delete ────────────────────────────────────────────────────────────────────
+function confirmDelete(id, cb) {
+  const c = ALL.find(x => x.id === id);
+  pendingDeleteId = id;
+  pendingDeleteCb = cb || null;
+  document.getElementById('del-name').textContent = c?.company_name || '';
+  bsDelModal().show();
+}
+
+document.getElementById('del-confirm').addEventListener('click', async () => {
+  if (!pendingDeleteId) return;
+  const res = await fetch(`/api/companies/${pendingDeleteId}`, { method:'DELETE' });
+  bsDelModal().hide();
+  if (res.ok) {
+    toast('Company deleted.', 'danger');
+    if (pendingDeleteCb) pendingDeleteCb();
+    load();
+  }
+  pendingDeleteId = null; pendingDeleteCb = null;
+});
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function exportExcel() { window.location.href = '/export'; }
+
+function exportPDF() {
+  const rows = applyFilters(ALL);
+  const win = window.open('', '_blank');
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-GB', {day:'2-digit', month:'short', year:'numeric'});
+
+  function escH(s) {
+    if (!s) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  function fmtD(val) {
+    if (!val) return '—';
+    const v = String(val).trim();
+    if (v.toUpperCase() === 'NA') return 'N/A';
+    const m = v.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})$/);
+    if (m) return `${m[1]}/${m[2]}/${m[3].slice(2)}`;
+    const d = new Date(v);
+    if (!isNaN(d)) return d.toLocaleDateString('en-GB',{day:'2-digit',month:'2-digit',year:'2-digit'});
+    return v;
+  }
+
+  const HK = r => ['HK','HONG KONG'].includes((r.country||'').trim().toUpperCase());
+  const uae    = rows.filter(r => (r.country||'').trim().toUpperCase() === 'UAE');
+  const hk     = rows.filter(r => HK(r));
+  const others = rows.filter(r => (r.country||'').trim().toUpperCase() !== 'UAE' && !HK(r));
+
+  const sections = [];
+  if (uae.length) sections.push({label:'UAE', rows:uae});
+  const byCountry = {};
+  others.forEach(r => { const k = r.country||'Other'; (byCountry[k]=byCountry[k]||[]).push(r); });
+  Object.keys(byCountry).sort().forEach(ct => sections.push({label:ct, rows:byCountry[ct]}));
+  if (hk.length) sections.push({label:'Hong Kong', rows:hk});
+
+  let bodyHTML = '';
+  sections.forEach((sec, si) => {
+    bodyHTML += `<tr class="sep"><td colspan="19">${escH(sec.label)}</td></tr>`;
+    sec.rows.forEach(r => {
+      const cat = r.cat||'';
+      const catCls = cat==='A' ? 'ca' : cat==='B' ? 'cb' : '';
+      bodyHTML += `<tr>
+        <td class="tc">${escH(r.sr_no)}</td>
+        <td class="tc"><span class="ct ${catCls}">${escH(cat)}</span></td>
+        <td class="tl co">${escH(r.company_name)}</td>
+        <td class="tl">${escH(r.activity)}</td>
+        <td class="tc">${escH(r.country)}</td>
+        <td class="tc">${fmtD(r.dnb_rep_validity)}</td>
+        <td class="tc fw">${escH(r.dnb_rating)||'—'}</td>
+        <td class="tc">${escH(r.dnb_processed_by)||'—'}</td>
+        <td class="tc">${fmtD(r.audit_rep)}</td>
+        <td class="tc">${escH(r.audit_processed_by)||'—'}</td>
+        <td class="tc">${escH(r.audit_prepared_by)||'—'}</td>
+        <td class="tc">${fmtD(r.mgtm_ac_q1)}</td>
+        <td class="tc">${fmtD(r.mgtm_ac_q2)}</td>
+        <td class="tc">${fmtD(r.mgtm_ac_q3)}</td>
+        <td class="tc">${fmtD(r.mgtm_ac_q4)}</td>
+        <td class="tc">${escH(r.aecb_dir)||'—'}</td>
+        <td class="tc">${fmtD(r.aecb_com)}</td>
+        <td class="tc">${escH(r.cibil_dir)||'—'}</td>
+        <td class="tl sm">${escH(r.remarks)}</td>
+      </tr>`;
+    });
+  });
+
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8">
+<title>MIS Export — ${dateStr}</title>
+<style>
+@page { size: A4 landscape; margin: 9mm 7mm; }
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,Helvetica,sans-serif;font-size:7.5px;color:#111}
+.hdr{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2.5px solid #1e3a8a;padding-bottom:4px;margin-bottom:5px}
+.h1{font-size:13px;font-weight:700;color:#1e3a8a;letter-spacing:.02em}
+.h2{font-size:7.5px;color:#555;margin-top:2px}
+.hd{font-size:7px;color:#666;text-align:right}
+table{width:100%;border-collapse:collapse;table-layout:fixed}
+colgroup col.sr{width:2.1%}col.cat{width:2.1%}col.co{width:11.5%}col.act{width:9.5%}col.ctr{width:3.8%}
+col.dv{width:5.2%}col.dr{width:4.3%}col.dp{width:5.3%}col.ar{width:5%}col.ap{width:5.3%}col.apb{width:5.3%}
+col.q1{width:3.9%}col.q2{width:3.9%}col.q3{width:3.9%}col.q4{width:3.9%}
+col.ad{width:3.8%}col.ac{width:4.3%}col.ci{width:3.8%}col.rm{width:12.1%}
+thead tr{background:#1e3a8a;color:#fff}
+thead th{padding:3px 2px;font-size:6.8px;font-weight:700;border:1px solid #3b5bdb;white-space:nowrap;overflow:hidden;text-align:center}
+thead th.tl{text-align:left}
+tbody tr:nth-child(even){background:#f0f4ff}
+tbody td{padding:2.5px 2px;border:1px solid #c8d0e8;vertical-align:top;overflow:hidden;word-break:break-word}
+.tc{text-align:center}.tl{text-align:left}.fw{font-weight:700}.co{font-weight:600}
+.sm{font-size:6.8px;color:#444}
+.ct{display:inline-block;font-weight:700;font-size:7px;padding:0 3px;border-radius:2px}
+.ca{background:#dcfce7;color:#166534}.cb{background:#fef9c3;color:#854d0e}
+.sep td{background:#dbeafe;color:#1e3a8a;font-weight:700;font-size:7px;padding:2px 4px;
+  border-top:2px solid #93c5fd;border-bottom:1px solid #bfdbfe;text-transform:uppercase;letter-spacing:.06em}
+</style></head><body>
+<div class="hdr">
+  <div><div class="h1">MIS — Company Information Report</div>
+  <div class="h2">${rows.length} companies &nbsp;·&nbsp; Exported ${dateStr}</div></div>
+  <div class="hd">Print date: ${dateStr}</div>
+</div>
+<table><colgroup>
+  <col class="sr"><col class="cat"><col class="co"><col class="act"><col class="ctr">
+  <col class="dv"><col class="dr"><col class="dp">
+  <col class="ar"><col class="ap"><col class="apb">
+  <col class="q1"><col class="q2"><col class="q3"><col class="q4">
+  <col class="ad"><col class="ac"><col class="ci"><col class="rm">
+</colgroup><thead><tr>
+  <th>SR</th><th>Cat</th><th class="tl">Company Name</th><th class="tl">Activity</th><th>Country</th>
+  <th>D&amp;B Valid</th><th>D&amp;B Rtg</th><th>D&amp;B Proc</th>
+  <th>Last Audit</th><th>Audit Proc</th><th>Auditor Name</th>
+  <th>Q1</th><th>Q2</th><th>Q3</th><th>Q4</th>
+  <th>AECB Dir</th><th>AECB Com</th><th>Cibil Dir</th><th class="tl">Remarks</th>
+</tr></thead><tbody>${bodyHTML}</tbody></table>
+</body></html>`);
+  win.document.close();
+  setTimeout(() => win.print(), 500);
+}
+
+// Parse a SQLite UTC timestamp string ("YYYY-MM-DD HH:MM:SS") as UTC so the
+// browser converts it to the viewer's local timezone when displaying.
+function parseSQLiteUTC(str) {
+  if (!str) return null;
+  return new Date(str.trim().replace(' ', 'T') + 'Z');
+}
+
+function fmtLocalDateTime(str) {
+  const d = parseSQLiteUTC(str);
+  if (!d || isNaN(d)) return str || '—';
+  return d.toLocaleString(undefined, {
+    day:'2-digit', month:'short', year:'numeric',
+    hour:'2-digit', minute:'2-digit', hour12:false
+  });
+}
+
+function fmtLocalDate(str) {
+  const d = parseSQLiteUTC(str);
+  if (!d || isNaN(d)) return str || '—';
+  return d.toLocaleDateString(undefined, {day:'2-digit', month:'short', year:'numeric'});
+}
+
+function parseDate(val) {
+  if (!val) return null;
+  const v = val.trim();
+  if (v.toUpperCase() === 'NA') return null;
+  const m = v.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})$/);
+  if (m) { const d = new Date(+m[3], +m[2]-1, +m[1]); return isNaN(d)?null:d; }
+  const d = new Date(v);
+  return isNaN(d) ? null : d;
+}
+
+function esc(s) {
+  if (!s) return '';
+  const d = document.createElement('div');
+  d.textContent = s; return d.innerHTML;
+}
+function dash() { return `<span style="color:var(--t3)">—</span>`; }
+function catBadge(cat) {
+  if (!cat) return '';
+  return `<span class="cat-badge cat-${cat}">${cat}</span>`;
+}
+function fmtDate(val) {
+  if (!val) return dash();
+  const v = val.trim().toUpperCase();
+  if (v==='NA'||v==='N/A') return `<span class="d-na" style="font-size:11px">NA</span>`;
+  const d = parseDate(val);
+  if (d) { const cls = d < new Date() ? 'd-expired' : 'd-valid'; return `<span class="${cls}" style="font-size:11px">${esc(val)}</span>`; }
+  return `<span style="font-size:11px">${esc(val)}</span>`;
+}
+function fmtAecbDir(val) {
+  if (!val) return dash();
+  const v = val.trim().toUpperCase();
+  if (v==='Y') return `<span class="spill spill-ok">Y</span>`;
+  if (v==='N') return `<span class="spill" style="background:var(--surface-2);color:var(--t2)">N</span>`;
+  return fmtDate(val);
+}
+function toast(msg, type='success') {
+  const el = document.getElementById('toast');
+  const colors = { success:'#15803D', danger:'#DC2626', info:'#1D4ED8' };
+  el.style.background = colors[type] || colors.success;
+  el.className = 'toast align-items-center text-white border-0';
+  document.getElementById('toast-msg').textContent = msg;
+  bsToast().show();
+}
+
+document.getElementById('modal').addEventListener('hidden.bs.modal', () => {
+  document.getElementById('f-company_name').classList.remove('is-invalid');
+});
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
+renderAllEditors();
+refreshSelects();
+loadSettingsFromDB();
+load();
+let currentUserRole = 'user';
+let userCanEdit = false;
+let myLinkedName = '';
+let myUserId = null;
+fetch('/api/me').then(r=>r.json()).then(d=>{
+  if (d.name) {
+    document.getElementById('sb-name').textContent = d.name;
+    document.getElementById('sb-av').textContent = d.name[0].toUpperCase();
+  }
+  myLinkedName = d.linked_name || '';
+  myUserId = d.id || null;
+  currentUserRole = d.role || 'user';
+  if (currentUserRole === 'admin' || currentUserRole === 'superadmin') {
+    userCanEdit = true;
+    document.querySelectorAll('.sb-admin-link').forEach(el => el.classList.remove('sb-admin-link'));
+    loadUsers();
+    if (currentUserRole === 'superadmin') {
+      document.getElementById('smtp-card').style.display = '';
+      document.getElementById('backup-card').style.display = '';
+      loadSMTP();
+    }
+  } else {
+    document.body.classList.add('view-only');
+    const h = location.hash.slice(1);
+    if (h === 'settings' || h === 'users') { history.replaceState(null,'','#dashboard'); _applyView('dashboard'); }
+  }
+  if (ALL.length) { renderDashboard(); renderNotifications(); }
+});
+window.addEventListener('resize', fixStickyOffsets);
+window.addEventListener('popstate', handleHash);
+
+document.querySelectorAll('table.mis thead th[data-sf]').forEach(th => {
+  th.addEventListener('click', () => {
+    const field = th.dataset.sf;
+
+    // ── Range sort (selection active) ──────────────────────────────────────
+    if (selAnchor !== null && selEnd !== null) {
+      if (rangeSortCol === field) { rangeSortDir *= -1; }
+      else { rangeSortCol = field; rangeSortDir = 1; }
+
+      const lo = Math.min(selAnchor, selEnd);
+      const hi = Math.max(selAnchor, selEnd);
+      const segment = lastFlatRows.slice(lo, hi + 1).sort((a, b) => {
+        let va = a[field], vb = b[field];
+        if (DATE_SF.has(field)) {
+          va = parseDate(va); vb = parseDate(vb);
+          if (!va && !vb) return 0;
+          if (!va) return 1; if (!vb) return -1;
+          return (va - vb) * rangeSortDir;
+        }
+        if (field === 'sr_no') return ((+va||0) - (+vb||0)) * rangeSortDir;
+        va = (va||'').toLowerCase(); vb = (vb||'').toLowerCase();
+        if (!va && !vb) return 0;
+        if (!va) return 1; if (!vb) return -1;
+        return va.localeCompare(vb) * rangeSortDir;
+      });
+      lastFlatRows = [...lastFlatRows.slice(0, lo), ...segment, ...lastFlatRows.slice(hi + 1)];
+      document.getElementById('tbody').innerHTML = lastFlatRows.map(rowHTML).join('');
+      requestAnimationFrame(fixStickyOffsets);
+
+      document.querySelectorAll('table.mis thead th').forEach(h => h.classList.remove('rsort-asc','rsort-desc'));
+      th.classList.add(rangeSortDir === 1 ? 'rsort-asc' : 'rsort-desc');
+      updateSelHighlight();
+      return;
+    }
+
+    // ── Whole-table sort ───────────────────────────────────────────────────
+    if (sortCol === field) {
+      if (sortDir === 1) { sortDir = -1; }
+      else { sortCol = null; sortDir = 1; }
+    } else {
+      sortCol = field; sortDir = 1;
+    }
+    document.querySelectorAll('table.mis thead th').forEach(h => h.classList.remove('sort-asc','sort-desc'));
+    if (sortCol) th.classList.add(sortDir === 1 ? 'sort-asc' : 'sort-desc');
+    render();
+  });
+});
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') clearSel(); });
+</script>
+</body>
+</html>
