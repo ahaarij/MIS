@@ -434,6 +434,7 @@ def admin_update_user(uid):
         target = conn.execute('SELECT name, email FROM users WHERE id=?', (uid,)).fetchone()
         conn.execute(f'UPDATE users SET {", ".join(fields)} WHERE id=?', values)
         conn.commit()
+    bump_version()
     tname = target['name'] if target else f'ID {uid}'
     temail = target['email'] if target else ''
     if 'name' in data:
@@ -501,6 +502,7 @@ def save_settings():
             conn.execute('INSERT INTO settings (key, value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value',
                          (key, value))
         conn.commit()
+    bump_version()
     return jsonify({'ok': True})
 
 
@@ -539,6 +541,7 @@ def clear_logs():
         count = conn.execute('SELECT COUNT(*) FROM logs').fetchone()[0]
         conn.execute('DELETE FROM logs')
         conn.commit()
+    bump_version()
     log_action('Logs Cleared', f'Cleared all {count} log entries from the audit trail. This action cannot be undone.')
     return jsonify({'ok': True})
 
@@ -549,6 +552,7 @@ def delete_log(log_id):
     with get_db() as conn:
         conn.execute('DELETE FROM logs WHERE id=?', (log_id,))
         conn.commit()
+    bump_version()
     return jsonify({'ok': True})
 
 
@@ -565,6 +569,7 @@ def admin_set_role(uid):
         row = conn.execute('SELECT name, email, role FROM users WHERE id=?', (uid,)).fetchone()
         conn.execute('UPDATE users SET role=? WHERE id=?', (role, uid))
         conn.commit()
+    bump_version()
     if row:
         log_action('Role Changed', f'Changed role for "{row["name"]}" ({row["email"]}) from "{row["role"]}" to "{role}"')
     else:
