@@ -1684,7 +1684,10 @@ async function _pollVersion() {
   try {
     const res = await fetch('/api/version');
     if (!res.ok) return;
-    const { v } = await res.json();
+    const { v, role } = await res.json();
+    if (currentUserRole && role && role !== currentUserRole) {
+      window.location.reload(); return;
+    }
     if (_knownVersion === null) { _knownVersion = v; return; }
     if (v !== _knownVersion) { _knownVersion = v; await _refreshData(); }
   } catch(e) {}

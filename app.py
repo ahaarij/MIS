@@ -575,7 +575,8 @@ def admin_set_role(uid):
 @app.route('/api/version')
 @require_auth
 def data_version():
-    return jsonify({'v': _data_version})
+    role = _get_live_role() or session.get('user_role', 'user')
+    return jsonify({'v': _data_version, 'role': role})
 
 
 # ── Backup / Restore ──────────────────────────────────────────────────────────
