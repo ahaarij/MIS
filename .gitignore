@@ -1,5 +1,6 @@
 # Environment & secrets
 .env
+.env.example
 .secret_key
 
 # Database (contains real data — never commit)
