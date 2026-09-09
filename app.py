@@ -182,9 +182,10 @@ def _migrate():
         ('mgtm_ac_q4', 'TEXT'),
     ]
     user_cols = [
-        ('role',        "TEXT DEFAULT 'user'"),
-        ('approved',    'INTEGER DEFAULT 0'),
-        ('linked_name', 'TEXT'),
+        ('role',              "TEXT DEFAULT 'user'"),
+        ('approved',          'INTEGER DEFAULT 0'),
+        ('linked_name',       'TEXT'),
+        ('allowed_countries', 'TEXT'),
     ]
     with get_db() as conn:
         existing = {row[1] for row in conn.execute('PRAGMA table_info(companies)').fetchall()}
@@ -345,10 +346,10 @@ def me():
     if 'user_id' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
     with get_db() as conn:
-        row = conn.execute('SELECT name, role, linked_name FROM users WHERE id=?', (session['user_id'],)).fetchone()
+        row = conn.execute('SELECT name, role, linked_name, allowed_countries FROM users WHERE id=?', (session['user_id'],)).fetchone()
     if not row:
         return jsonify({'error': 'Unauthorized'}), 401
-    return jsonify({'id': session['user_id'], 'name': row['name'], 'role': row['role'], 'linked_name': row['linked_name'] or ''})
+    return jsonify({'id': session['user_id'], 'name': row['name'], 'role': row['role'], 'linked_name': row['linked_name'] or '', 'allowed_countries': row['allowed_countries'] or ''})
 
 
 def _get_live_role():
@@ -395,7 +396,7 @@ def require_superadmin(f):
 def admin_list_users():
     with get_db() as conn:
         rows = conn.execute(
-            'SELECT id, name, email, role, approved, linked_name, created_at FROM users ORDER BY created_at'
+            'SELECT id, name, email, role, approved, linked_name, allowed_countries, created_at FROM users ORDER BY created_at'
         ).fetchall()
     return jsonify([dict(r) for r in rows])
 
@@ -427,6 +428,8 @@ def admin_update_user(uid):
         fields.append('name=?'); values.append(name)
     if 'linked_name' in data:
         fields.append('linked_name=?'); values.append(data['linked_name'] or None)
+    if 'allowed_countries' in data and is_superadmin:
+        fields.append('allowed_countries=?'); values.append(data['allowed_countries'] or None)
     if not fields:
         return jsonify({'error': 'Nothing to update'}), 400
     values.append(uid)
@@ -442,6 +445,9 @@ def admin_update_user(uid):
     if 'linked_name' in data:
         linked = data['linked_name'] or '(none)'
         log_action('Staff Name Linked', f'Linked account "{tname}" ({temail}) to staff name "{linked}". Task notifications and alerts will now use this name.')
+    if 'allowed_countries' in data and is_superadmin:
+        ac = data['allowed_countries'] or 'all'
+        log_action('Country Access Updated', f'Set country access for "{tname}" ({temail}) to: {ac}')
     return jsonify({'ok': True})
 
 
@@ -661,16 +667,24 @@ def index():
 @app.route('/api/companies', methods=['GET'])
 @require_auth
 def get_companies():
+    live_role = _get_live_role() or session.get('user_role', 'user')
     with get_db() as conn:
         rows = conn.execute(
             'SELECT * FROM companies ORDER BY country, cat, sort_order, id'
         ).fetchall()
+        if live_role != 'superadmin':
+            ac_row = conn.execute('SELECT allowed_countries FROM users WHERE id=?', (session['user_id'],)).fetchone()
+            allowed = [c.strip().upper() for c in (ac_row['allowed_countries'] or '').split(',') if c.strip()] if ac_row else []
+        else:
+            allowed = []
 
     companies = []
     sr_by_country: dict = {}
     for row in rows:
         d = dict(row)
         country = (d.get('country') or 'UAE').strip().upper()
+        if allowed and country not in allowed:
+            continue
         sr_by_country.setdefault(country, 1)
         d['sr_no'] = sr_by_country[country]
         sr_by_country[country] += 1

@@ -942,13 +942,14 @@ body.view-only .edit-only { display:none !important; }
               <th class="um-col-email">Email</th>
               <th>Role</th>
               <th class="um-col-link">Staff Name Link</th>
+              <th class="um-col-countries">Country Access</th>
               <th class="um-col-status">Status</th>
               <th class="um-col-joined">Joined</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody id="um-tbody">
-            <tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--t3)"><i class="bi bi-hourglass-split me-2"></i>Loading…</td></tr>
+            <tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--t3)"><i class="bi bi-hourglass-split me-2"></i>Loading…</td></tr>
           </tbody>
         </table>
       </div>
@@ -1437,6 +1438,8 @@ function navTo(view) {
   _applyView(view);
   const hash = view === 'company' && currentCompanyId ? 'company/' + currentCompanyId : view;
   if (location.hash.slice(1) !== hash) history.pushState(null, '', '#' + hash);
+  if (view === 'logs') loadLogs();
+  if (view === 'users') loadUsers();
 }
 
 function handleHash() {
@@ -1491,6 +1494,24 @@ async function loadUsers() {
     </select>`;
   };
 
+  const allCountries = getList('countries').length ? getList('countries') : [...new Set(ALL.map(c => c.country).filter(Boolean))].sort();
+  const countriesCell = (u) => {
+    if (u.role === 'superadmin') return `<span style="color:var(--t3);font-size:.75rem">All</span>`;
+    if (!isSuperAdmin) {
+      const label = u.allowed_countries || 'All';
+      return `<span style="color:var(--t2);font-size:.78rem">${esc(label)}</span>`;
+    }
+    const current = (u.allowed_countries || '').split(',').map(s=>s.trim().toUpperCase()).filter(Boolean);
+    const boxes = allCountries.map(ct =>
+      `<label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap">
+        <input type="checkbox" value="${esc(ct)}" ${current.includes(ct.toUpperCase())?'checked':''}
+          onchange="updateUserCountriesCheck(${u.id},this.closest('.ct-checklist'))">
+        ${esc(ct)}
+      </label>`
+    ).join('');
+    return `<div class="ct-checklist" style="display:flex;flex-direction:column;gap:2px">${boxes}</div>`;
+  };
+
   const linkedSelect = (u) => {
     const canLink = isSuperAdmin || u.id === myUserId;
     if (!canLink) return `<span style="color:var(--t2);font-size:.78rem">${esc(u.linked_name||'—')}</span>`;
@@ -1517,6 +1538,7 @@ async function loadUsers() {
       <td class="um-col-email" style="color:var(--t2)">${esc(u.email)}</td>
       <td>${roleSelect(u)}</td>
       <td class="um-col-link">${linkedSelect(u)}</td>
+      <td class="um-col-countries">${countriesCell(u)}</td>
       <td class="um-col-status"><span class="status-pill ${u.approved?'sp-approved':'sp-pending'}">${u.approved?'Approved':'Pending'}</span></td>
       <td class="um-col-joined" style="color:var(--t2);font-size:.75rem">${joined}</td>
       <td>${actions}</td>
@@ -1628,6 +1650,12 @@ async function renameUser(id, currentName) {
   const newName = prompt('New display name:', currentName);
   if (!newName || newName.trim() === currentName) return;
   updateUser(id, {name: newName.trim()});
+}
+
+async function updateUserCountriesCheck(id, container) {
+  const selected = [...container.querySelectorAll('input[type=checkbox]:checked')].map(cb => cb.value);
+  const val = selected.length ? selected.join(',') : '';
+  await updateUser(id, {allowed_countries: val});
 }
 
 async function approveUser(id) {
@@ -2104,7 +2132,8 @@ document.getElementById('search-box').addEventListener('input', e => {
 });
 
 function rebuildCountryFilter() {
-  const countries = [...new Set(ALL.map(c => c.country).filter(Boolean))].sort();
+  let countries = [...new Set(ALL.map(c => c.country).filter(Boolean))].sort();
+  if (myAllowedCountries.length) countries = countries.filter(ct => myAllowedCountries.includes(ct.toUpperCase()));
   const sel = document.getElementById('country-sel');
   const cur = sel.value;
   sel.innerHTML = '<option value="">All Countries</option>';
@@ -2114,6 +2143,7 @@ function rebuildCountryFilter() {
     if (ct === cur) o.selected = true;
     sel.appendChild(o);
   });
+  sel.parentElement.style.display = countries.length <= 1 ? 'none' : '';
 }
 
 // ── Add / Edit ────────────────────────────────────────────────────────────────
@@ -2398,6 +2428,7 @@ let currentUserRole = 'user';
 let userCanEdit = false;
 let myLinkedName = '';
 let myUserId = null;
+let myAllowedCountries = [];
 fetch('/api/me').then(r=>r.json()).then(d=>{
   if (d.name) {
     document.getElementById('sb-name').textContent = d.name;
@@ -2406,6 +2437,7 @@ fetch('/api/me').then(r=>r.json()).then(d=>{
   myLinkedName = d.linked_name || '';
   myUserId = d.id || null;
   currentUserRole = d.role || 'user';
+  myAllowedCountries = d.allowed_countries ? d.allowed_countries.split(',').map(s=>s.trim().toUpperCase()).filter(Boolean) : [];
   if (currentUserRole === 'admin' || currentUserRole === 'superadmin') {
     userCanEdit = true;
     document.querySelectorAll('.sb-admin-link').forEach(el => el.classList.remove('sb-admin-link'));
