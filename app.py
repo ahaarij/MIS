@@ -890,17 +890,21 @@ def _build_workbook(companies):
 @app.route('/export')
 @require_auth
 def export_excel():
+    country_filter = request.args.get('country', '').strip().upper()
     with get_db() as conn:
         rows = conn.execute(
             'SELECT * FROM companies ORDER BY country, cat, sort_order, id'
         ).fetchall()
     companies = [dict(r) for r in rows]
+    if country_filter:
+        companies = [c for c in companies if (c.get('country') or '').strip().upper() == country_filter]
 
     buf = io.BytesIO()
     _build_workbook(companies).save(buf)
     buf.seek(0)
 
-    filename = f'MIS_{datetime.now().strftime("%d-%m-%Y")}.xlsx'
+    suffix = f'_{country_filter}' if country_filter else ''
+    filename = f'MIS{suffix}_{datetime.now().strftime("%d-%m-%Y")}.xlsx'
     return send_file(buf, as_attachment=True, download_name=filename,
                      mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 

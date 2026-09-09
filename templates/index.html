@@ -692,7 +692,7 @@ body.view-only .edit-only { display:none !important; }
   <div class="sidebar-footer">
     <div class="sb-user"><div class="sb-avatar" id="sb-av">?</div><span class="sb-name" id="sb-name">Loading…</span></div>
     <a class="sb-logout" href="/logout"><i class="bi bi-box-arrow-left"></i> Sign out</a>
-    <div style="text-align:center;margin-top:6px;font-size:10px;color:rgba(255,255,255,.45);letter-spacing:.04em;">v1.3</div>
+    <div style="text-align:center;margin-top:6px;font-size:10px;color:rgba(255,255,255,.45);letter-spacing:.04em;">v1.4</div>
   </div>
 </nav>
 
@@ -771,8 +771,9 @@ body.view-only .edit-only { display:none !important; }
       <span class="count-badge" id="count-badge">0 records</span>
       <span class="sel-badge" id="sel-badge"><i class="bi bi-table"></i><span id="sel-count"></span> selected <button onclick="clearSel()" title="Clear selection">×</button></span>
       <div class="ms-auto d-flex align-items-center gap-2">
-        <button class="tb-btn tb-btn-excel edit-only" onclick="exportExcel()"><i class="bi bi-file-earmark-excel"></i>Export All</button>
-        <button class="tb-btn tb-btn-pdf edit-only" onclick="exportPDF()"><i class="bi bi-file-earmark-pdf"></i>Export PDF</button>
+        <select class="tb-select edit-only" id="export-country-sel" style="height:30px;font-size:11px"><option value="">All Countries</option></select>
+        <button class="tb-btn tb-btn-excel edit-only" onclick="exportExcel()"><i class="bi bi-file-earmark-excel"></i>Excel</button>
+        <button class="tb-btn tb-btn-pdf edit-only" onclick="exportPDF()"><i class="bi bi-file-earmark-pdf"></i>PDF</button>
         <button class="tb-btn tb-btn-primary edit-only" onclick="openAdd()"><i class="bi bi-plus-lg"></i>Add Company</button>
         <div class="toolbar-sep"></div>
         <div class="vtoggle">
@@ -851,9 +852,10 @@ body.view-only .edit-only { display:none !important; }
       <div class="settings-card">
         <h3><i class="bi bi-file-earmark-excel"></i>Export</h3>
         <p class="hint-text mb-3">Download the full MIS as a formatted Excel workbook.</p>
-        <div class="d-flex gap-2">
-          <button class="tb-btn tb-btn-excel" onclick="exportExcel()"><i class="bi bi-file-earmark-excel"></i>Export All to Excel</button>
-          <button class="tb-btn tb-btn-pdf" onclick="exportPDF()"><i class="bi bi-file-earmark-pdf"></i>Export All to PDF</button>
+        <div class="d-flex gap-2 align-items-center flex-wrap">
+          <select class="tb-select" id="export-country-sel-2" style="height:30px;font-size:11px"><option value="">All Countries</option></select>
+          <button class="tb-btn tb-btn-excel" onclick="exportExcel()"><i class="bi bi-file-earmark-excel"></i>Export to Excel</button>
+          <button class="tb-btn tb-btn-pdf" onclick="exportPDF()"><i class="bi bi-file-earmark-pdf"></i>Export to PDF</button>
         </div>
       </div>
       <div class="settings-card" id="smtp-card" style="display:none">
@@ -2144,6 +2146,18 @@ function rebuildCountryFilter() {
     sel.appendChild(o);
   });
   sel.parentElement.style.display = countries.length <= 1 ? 'none' : '';
+  ['export-country-sel','export-country-sel-2'].forEach(id => {
+    const es = document.getElementById(id);
+    if (!es) return;
+    const ecur = es.value;
+    es.innerHTML = '<option value="">All Countries</option>';
+    countries.forEach(ct => {
+      const o = document.createElement('option');
+      o.value = ct; o.textContent = ct;
+      if (ct === ecur) o.selected = true;
+      es.appendChild(o);
+    });
+  });
 }
 
 // ── Add / Edit ────────────────────────────────────────────────────────────────
@@ -2234,10 +2248,20 @@ document.getElementById('del-confirm').addEventListener('click', async () => {
 });
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-function exportExcel() { window.location.href = '/export'; }
+function _exportCountry() {
+  const s1 = document.getElementById('export-country-sel');
+  const s2 = document.getElementById('export-country-sel-2');
+  return (s1 && s1.value) || (s2 && s2.value) || '';
+}
+
+function exportExcel() {
+  const ct = _exportCountry();
+  window.location.href = ct ? '/export?country=' + encodeURIComponent(ct) : '/export';
+}
 
 function exportPDF() {
-  const rows = applyFilters(ALL);
+  const ct = _exportCountry();
+  const rows = applyFilters(ct ? ALL.filter(r => (r.country||'').toUpperCase() === ct.toUpperCase()) : ALL);
   const win = window.open('', '_blank');
   const now = new Date();
   const dateStr = now.toLocaleDateString('en-GB', {day:'2-digit', month:'short', year:'numeric'});
