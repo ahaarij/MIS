@@ -339,6 +339,23 @@ table.mis thead th.sort-desc::after { content:' ↓'; }
 table.mis thead th.rsort-asc::after  { content:' ↑'; color:#fbbf24; }
 table.mis thead th.rsort-desc::after { content:' ↓'; color:#fbbf24; }
 table.mis tbody tr.row-sel td { background: rgba(99,102,241,.12) !important; }
+table.mis tbody tr.hl-yellow td { background: #FFFDE7 !important; }
+table.mis tbody tr.hl-green  td { background: #F1FFF3 !important; }
+table.mis tbody tr.hl-red    td { background: #FFF5F5 !important; }
+table.mis tbody tr.hl-blue   td { background: #EFF6FF !important; }
+table.mis tbody tr.hl-orange td { background: #FFF8F0 !important; }
+table.mis tbody tr.hl-yellow:hover td, table.mis tbody tr.hl-green:hover td,
+table.mis tbody tr.hl-red:hover td,    table.mis tbody tr.hl-blue:hover td,
+table.mis tbody tr.hl-orange:hover td  { background: var(--accent-lt) !important; }
+.hl-picker { position:relative; display:inline-block; }
+.hl-dot { width:14px; height:14px; border-radius:50%; border:1.5px solid rgba(0,0,0,.15); cursor:pointer; display:inline-block; background:#e2e8f0; }
+.hl-dot.has-color { border-color:rgba(0,0,0,.25); }
+.hl-palette { display:none; position:absolute; right:0; bottom:18px; background:#fff; border:1px solid var(--border); border-radius:8px; padding:5px; gap:4px; z-index:200; box-shadow:0 4px 12px rgba(0,0,0,.15); flex-wrap:wrap; width:98px; }
+.hl-picker:hover .hl-palette, .hl-palette:hover { display:flex; }
+.hl-swatch { width:18px; height:18px; border-radius:4px; cursor:pointer; border:1.5px solid rgba(0,0,0,.15); transition:transform .1s; }
+.hl-swatch:hover { transform:scale(1.2); }
+.hl-clear { width:18px; height:18px; border-radius:4px; cursor:pointer; border:1.5px solid var(--border); background:#fff; font-size:10px; display:flex; align-items:center; justify-content:center; color:var(--t3); }
+.hl-clear:hover { color:var(--red); border-color:var(--red); }
 table.mis tbody td.sel-handle { cursor: cell; }
 .sel-badge { display:none; align-items:center; gap:5px; background:rgba(99,102,241,.1); border:1px solid rgba(99,102,241,.35); color:#4338ca; border-radius:6px; font-size:11px; font-weight:600; padding:3px 9px; white-space:nowrap; }
 .sel-badge.on { display:flex; }
@@ -692,7 +709,7 @@ body.view-only .edit-only { display:none !important; }
   <div class="sidebar-footer">
     <div class="sb-user"><div class="sb-avatar" id="sb-av">?</div><span class="sb-name" id="sb-name">Loading…</span></div>
     <a class="sb-logout" href="/logout"><i class="bi bi-box-arrow-left"></i> Sign out</a>
-    <div style="text-align:center;margin-top:6px;font-size:10px;color:rgba(255,255,255,.45);letter-spacing:.04em;">v1.4</div>
+    <div style="text-align:center;margin-top:6px;font-size:10px;color:rgba(255,255,255,.45);letter-spacing:.04em;">v1.5</div>
   </div>
 </nav>
 
@@ -807,6 +824,7 @@ body.view-only .edit-only { display:none !important; }
             <th class="gh-cb"    style="width:95px"        data-sf="aecb_com">AECB Com</th>
             <th class="gh-cb"    style="width:88px"        data-sf="cibil_dir">Cibil Dir</th>
             <th class="gh-base"  style="min-width:155px"   data-sf="remarks">Remarks</th>
+            <th class="gh-base"  style="width:36px"></th>
             <th class="gh-base edit-only"  style="width:80px">Actions</th>
           </tr>
         </thead>
@@ -1838,9 +1856,22 @@ function fixStickyOffsets() {
   document.querySelectorAll('.sc3').forEach(el => el.style.left = left3);
 }
 
+const HL_SWATCHES = {yellow:'#FFF176',green:'#A5D6A7',red:'#EF9A9A',blue:'#90CAF9',orange:'#FFCC80'};
+function hlPicker(id, cur) {
+  const dotBg = cur ? HL_SWATCHES[cur] : '#e2e8f0';
+  const swatches = Object.entries(HL_SWATCHES).map(([k,v]) =>
+    `<div class="hl-swatch" style="background:${v}" title="${k}" onclick="setHighlight(${id},'${k}')"></div>`
+  ).join('');
+  return `<div class="hl-picker" onclick="event.stopPropagation()">
+    <div class="hl-dot${cur?' has-color':''}" style="background:${dotBg}" title="${cur||'No highlight'}"></div>
+    <div class="hl-palette">${swatches}<div class="hl-clear" title="Clear" onclick="setHighlight(${id},'')">✕</div></div>
+  </div>`;
+}
+
 function rowHTML(c) {
+  const hlClass = c.highlight ? ` hl-${c.highlight}` : '';
   return `
-  <tr data-rid="${c.id}" onclick="openDetail(${c.id})">
+  <tr data-rid="${c.id}" class="${hlClass}" onclick="openDetail(${c.id})">
     <td class="sc1 sel-handle text-center" style="color:var(--t3)" onclick="event.stopPropagation();srClick(${c.id},event)">${c.sr_no}</td>
     <td class="sc2 text-center">${catBadge(c.cat)}</td>
     <td class="sc3 co-name">${esc(c.company_name)}</td>
@@ -1860,6 +1891,7 @@ function rowHTML(c) {
     <td class="text-center">${fmtDate(c.aecb_com)}</td>
     <td class="text-center" style="color:var(--t2)">${c.cibil_dir ? esc(c.cibil_dir) : dash()}</td>
     <td style="color:var(--t2);font-size:11.5px">${esc(c.remarks)}</td>
+    <td class="text-center" onclick="event.stopPropagation()">${hlPicker(c.id, c.highlight)}</td>
     ${userCanEdit ? `<td class="text-center" onclick="event.stopPropagation()">
       <button class="btn btn-outline-secondary btn-act me-1" style="font-size:11px;padding:2px 6px;border-color:var(--border)" onclick="openEdit(${c.id})" title="Edit"><i class="bi bi-pencil-fill"></i></button>
       <button class="btn btn-act" style="font-size:11px;padding:2px 6px;background:var(--red-lt);color:var(--red);border:1px solid transparent" onclick="confirmDelete(${c.id})" title="Delete"><i class="bi bi-trash-fill"></i></button>
@@ -2227,6 +2259,17 @@ async function save() {
 }
 
 // ── Delete ────────────────────────────────────────────────────────────────────
+async function setHighlight(id, color) {
+  const res = await fetch(`/api/companies/${id}/highlight`, {
+    method: 'PATCH', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({color})
+  });
+  if (res.ok) {
+    const c = ALL.find(x => x.id === id);
+    if (c) { c.highlight = color || null; render(); }
+  }
+}
+
 function confirmDelete(id, cb) {
   const c = ALL.find(x => x.id === id);
   pendingDeleteId = id;
@@ -2299,7 +2342,8 @@ function exportPDF() {
     sec.rows.forEach(r => {
       const cat = r.cat||'';
       const catCls = cat==='A' ? 'ca' : cat==='B' ? 'cb' : '';
-      bodyHTML += `<tr>
+      const hlBg = {yellow:'#FFFDE7',green:'#F1FFF3',red:'#FFF5F5',blue:'#EFF6FF',orange:'#FFF8F0'}[r.highlight||''] || '';
+      bodyHTML += `<tr${hlBg ? ` style="background:${hlBg}"` : ''}>
         <td class="tc">${escH(r.sr_no)}</td>
         <td class="tc"><span class="ct ${catCls}">${escH(cat)}</span></td>
         <td class="tl co">${escH(r.company_name)}</td>
@@ -2327,7 +2371,7 @@ function exportPDF() {
 <title>MIS Export — ${dateStr}</title>
 <style>
 @page { size: A4 landscape; margin: 9mm 7mm; }
-*{box-sizing:border-box;margin:0;padding:0}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 body{font-family:Arial,Helvetica,sans-serif;font-size:7.5px;color:#111}
 .hdr{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2.5px solid #1e3a8a;padding-bottom:4px;margin-bottom:5px}
 .h1{font-size:13px;font-weight:700;color:#1e3a8a;letter-spacing:.02em}

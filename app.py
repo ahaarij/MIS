@@ -180,6 +180,7 @@ def _migrate():
         ('mgtm_ac_q2', 'TEXT'),
         ('mgtm_ac_q3', 'TEXT'),
         ('mgtm_ac_q4', 'TEXT'),
+        ('highlight',  'TEXT'),
     ]
     user_cols = [
         ('role',              "TEXT DEFAULT 'user'"),
@@ -781,6 +782,21 @@ def delete_company(company_id):
     return '', 204
 
 
+ALLOWED_HIGHLIGHTS = {'yellow', 'green', 'red', 'blue', 'orange', ''}
+
+@app.route('/api/companies/<int:company_id>/highlight', methods=['PATCH'])
+@require_auth
+def set_highlight(company_id):
+    color = (request.json or {}).get('color', '').strip().lower()
+    if color not in ALLOWED_HIGHLIGHTS:
+        return jsonify({'error': 'Invalid color'}), 400
+    with get_db() as conn:
+        conn.execute('UPDATE companies SET highlight=? WHERE id=?', (color or None, company_id))
+        conn.commit()
+    bump_version()
+    return jsonify({'ok': True})
+
+
 # ── Excel export ────────────────────────────────────────────────────────────
 
 EXCEL_HEADERS = [
@@ -865,12 +881,17 @@ def _build_workbook(companies):
             row_num += 1
 
         for comp in group:
+            hl = (comp.get('highlight') or '').lower()
+            hl_colors = {'yellow':'FFFF99','green':'CCFFCC','red':'FFCCCC','blue':'CCE5FF','orange':'FFE0B2'}
+            hl_fill = PatternFill(start_color=hl_colors[hl], end_color=hl_colors[hl], fill_type='solid') if hl in hl_colors else None
             for col_i, field in enumerate(EXCEL_FIELDS, 1):
                 val = sr if field is None else (comp.get(field) or '')
                 cell = ws.cell(row=row_num, column=col_i, value=val)
                 cell.font      = data_font
                 cell.alignment = center if col_i <= 2 else left
                 cell.border    = bdr
+                if hl_fill:
+                    cell.fill = hl_fill
             row_num += 1
             sr += 1
 
