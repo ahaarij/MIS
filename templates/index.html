@@ -2361,25 +2361,26 @@ function exportPDF() {
       const cat = r.cat||'';
       const catCls = cat==='A' ? 'ca' : cat==='B' ? 'cb' : '';
       const hlBg = {yellow:'#FFFDE7',green:'#F1FFF3',red:'#FFF5F5',blue:'#EFF6FF',orange:'#FFF8F0'}[r.highlight||''] || '';
-      bodyHTML += `<tr${hlBg ? ` style="background:${hlBg}"` : ''}>
-        <td class="tc">${escH(r.sr_no)}</td>
-        <td class="tc"><span class="ct ${catCls}">${escH(cat)}</span></td>
-        <td class="tl co">${escH(r.company_name)}</td>
-        <td class="tl">${escH(r.activity)}</td>
-        <td class="tc">${escH(r.country)}</td>
-        <td class="tc">${fmtD(r.dnb_rep_validity)}</td>
-        <td class="tc fw">${escH(r.dnb_rating)||'—'}</td>
-        <td class="tc">${escH(r.dnb_processed_by)||'—'}</td>
-        <td class="tc">${fmtD(r.audit_rep)}</td>
-        <td class="tc">${escH(r.audit_processed_by)||'—'}</td>
-        <td class="tc">${escH(r.audit_prepared_by)||'—'}</td>
-        <td class="tc">${fmtD(r.mgtm_ac_q1)}</td>
-        <td class="tc">${fmtD(r.mgtm_ac_q2)}</td>
-        <td class="tc">${fmtD(r.mgtm_ac_q3)}</td>
-        <td class="tc">${fmtD(r.mgtm_ac_q4)}</td>
-        <td class="tc">${escH(r.aecb_dir)||'—'}</td>
-        <td class="tc">${fmtD(r.aecb_com)}</td>
-        <td class="tc">${escH(r.cibil_dir)||'—'}</td>
+      const tdS = hlBg ? ` style="background-image:linear-gradient(${hlBg},${hlBg});background-color:${hlBg}"` : '';
+      bodyHTML += `<tr>
+        <td class="tc"${tdS}>${escH(r.sr_no)}</td>
+        <td class="tc"${tdS}><span class="ct ${catCls}">${escH(cat)}</span></td>
+        <td class="tl co"${tdS}>${escH(r.company_name)}</td>
+        <td class="tl"${tdS}>${escH(r.activity)}</td>
+        <td class="tc"${tdS}>${escH(r.country)}</td>
+        <td class="tc"${tdS}>${fmtD(r.dnb_rep_validity)}</td>
+        <td class="tc fw"${tdS}>${escH(r.dnb_rating)||'—'}</td>
+        <td class="tc"${tdS}>${escH(r.dnb_processed_by)||'—'}</td>
+        <td class="tc"${tdS}>${fmtD(r.audit_rep)}</td>
+        <td class="tc"${tdS}>${escH(r.audit_processed_by)||'—'}</td>
+        <td class="tc"${tdS}>${escH(r.audit_prepared_by)||'—'}</td>
+        <td class="tc"${tdS}>${fmtD(r.mgtm_ac_q1)}</td>
+        <td class="tc"${tdS}>${fmtD(r.mgtm_ac_q2)}</td>
+        <td class="tc"${tdS}>${fmtD(r.mgtm_ac_q3)}</td>
+        <td class="tc"${tdS}>${fmtD(r.mgtm_ac_q4)}</td>
+        <td class="tc"${tdS}>${escH(r.aecb_dir)||'—'}</td>
+        <td class="tc"${tdS}>${fmtD(r.aecb_com)}</td>
+        <td class="tc"${tdS}>${escH(r.cibil_dir)||'—'}</td>
         <td class="tl sm">${escH(r.remarks)}</td>
       </tr>`;
     });
