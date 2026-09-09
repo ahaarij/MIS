@@ -709,7 +709,7 @@ body.view-only .edit-only { display:none !important; }
   <div class="sidebar-footer">
     <div class="sb-user"><div class="sb-avatar" id="sb-av">?</div><span class="sb-name" id="sb-name">Loading…</span></div>
     <a class="sb-logout" href="/logout"><i class="bi bi-box-arrow-left"></i> Sign out</a>
-    <div style="text-align:center;margin-top:6px;font-size:10px;color:rgba(255,255,255,.45);letter-spacing:.04em;">v1.5</div>
+    <div style="text-align:center;margin-top:6px;font-size:10px;color:rgba(255,255,255,.45);letter-spacing:.04em;">v1.6</div>
   </div>
 </nav>
 
@@ -1495,6 +1495,7 @@ async function loadUsers() {
   badge.style.display = pending ? 'inline-flex' : 'none';
 
   const ROLE_LABELS = { superadmin: 'Super Admin', admin: 'Admin', user: 'User' };
+  const roleLabel = (u) => u.id === 1 ? 'Developer' : (ROLE_LABELS[u.role] || u.role);
   const isSuperAdmin = currentUserRole === 'superadmin';
   const staffNames = [...new Set([
     ...getList('staff'),
@@ -1505,7 +1506,7 @@ async function loadUsers() {
 
   const roleSelect = (u) => {
     if (!isSuperAdmin || u.role === 'superadmin') {
-      return `<span class="role-badge rb-${u.role}">${ROLE_LABELS[u.role] || u.role}</span>`;
+      return `<span class="role-badge rb-${u.role}">${roleLabel(u)}</span>`;
     }
     return `<select class="tb-select" style="height:26px;font-size:11px;padding:0 6px" onchange="setUserRole(${u.id},this.value)">
       <option value="user"  ${u.role==='user'  ?'selected':''}>User</option>
