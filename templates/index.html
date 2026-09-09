@@ -719,7 +719,7 @@ body.view-only .edit-only { display:none !important; }
   <div class="sidebar-footer">
     <div class="sb-user"><div class="sb-avatar" id="sb-av">?</div><span class="sb-name" id="sb-name">Loading…</span></div>
     <a class="sb-logout" href="/logout"><i class="bi bi-box-arrow-left"></i> Sign out</a>
-    <div style="text-align:center;margin-top:6px;font-size:10px;color:rgba(255,255,255,.45);letter-spacing:.04em;">v1.6</div>
+    <div style="text-align:center;margin-top:6px;font-size:10px;color:rgba(255,255,255,.45);letter-spacing:.04em;">v1.7</div>
   </div>
 </nav>
 
@@ -2360,7 +2360,7 @@ function exportPDF() {
     sec.rows.forEach(r => {
       const cat = r.cat||'';
       const catCls = cat==='A' ? 'ca' : cat==='B' ? 'cb' : '';
-      const hlBg = {yellow:'#FFFDE7',green:'#F1FFF3',red:'#FFF5F5',blue:'#EFF6FF',orange:'#FFF8F0'}[r.highlight||''] || '';
+      const hlBg = {yellow:'#FFE566',green:'#86EFAC',red:'#FCA5A5',blue:'#93C5FD',orange:'#FDBA74'}[r.highlight||''] || '';
       const tdS = hlBg ? ` style="background-image:linear-gradient(${hlBg},${hlBg});background-color:${hlBg}"` : '';
       bodyHTML += `<tr>
         <td class="tc"${tdS}>${escH(r.sr_no)}</td>
