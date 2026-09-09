@@ -601,9 +601,18 @@ table.mis tbody tr:hover           .sc3 { background:var(--accent-lt)  !importan
 .um-table tr:last-child td { border-bottom:none; }
 .um-table tr:hover td { background:var(--accent-lt); }
 .role-badge { display:inline-block; padding:2px 8px; border-radius:5px; font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.03em; }
-.rb-superadmin { background:#fef3c7; color:#92400e; }
-.rb-admin      { background:#dbeafe; color:#1e40af; }
-.rb-user       { background:var(--surface-2); color:var(--t2); }
+.rb-superadmin  { background:#fef3c7; color:#92400e; }
+.rb-developer   { background:#fee2e2; color:#dc2626; }
+.rb-admin       { background:#dbeafe; color:#1e40af; }
+.rb-user        { background:var(--surface-2); color:var(--t2); }
+.role-picker { position:relative; display:inline-block; }
+.role-picker .role-badge { cursor:pointer; user-select:none; }
+.role-drop { display:none; position:absolute; left:0; top:calc(100% + 4px); background:#fff; border:1px solid var(--border); border-radius:8px; padding:4px; z-index:300; box-shadow:0 4px 12px rgba(0,0,0,.15); min-width:110px; }
+.role-picker.open .role-drop { display:block; }
+.role-opt { padding:5px 10px; font-size:11px; font-weight:600; cursor:pointer; border-radius:5px; white-space:nowrap; }
+.role-opt:hover { background:var(--bg); }
+.role-opt.ro-admin { color:#1e40af; }
+.role-opt.ro-user  { color:var(--t2); }
 .status-pill { display:inline-block; padding:2px 8px; border-radius:5px; font-size:.72rem; font-weight:700; }
 .sp-approved { background:var(--grn-lt); color:var(--green); }
 .sp-pending  { background:#fffbeb; color:#b45309; }
@@ -1505,14 +1514,18 @@ async function loadUsers() {
   ])].sort();
 
   const roleSelect = (u) => {
+    const badgeCls = u.id === 1 ? 'rb-developer' : `rb-${u.role}`;
     if (!isSuperAdmin || u.role === 'superadmin') {
-      return `<span class="role-badge rb-${u.role}">${roleLabel(u)}</span>`;
+      return `<span class="role-badge ${badgeCls}">${roleLabel(u)}</span>`;
     }
-    return `<select class="tb-select" style="height:26px;font-size:11px;padding:0 6px" onchange="setUserRole(${u.id},this.value)">
-      <option value="user"  ${u.role==='user'  ?'selected':''}>User</option>
-      <option value="admin" ${u.role==='admin' ?'selected':''}>Admin</option>
-      <option value="superadmin" ${u.role==='superadmin'?'selected':''}>Super Admin</option>
-    </select>`;
+    return `<div class="role-picker" onclick="event.stopPropagation();this.classList.toggle('open')">
+      <span class="role-badge ${badgeCls}">${roleLabel(u)} ▾</span>
+      <div class="role-drop">
+        <div class="role-opt ro-user"  onclick="setUserRole(${u.id},'user');this.closest('.role-picker').classList.remove('open')">User</div>
+        <div class="role-opt ro-admin" onclick="setUserRole(${u.id},'admin');this.closest('.role-picker').classList.remove('open')">Admin</div>
+        <div class="role-opt" style="color:#92400e" onclick="setUserRole(${u.id},'superadmin');this.closest('.role-picker').classList.remove('open')">Super Admin</div>
+      </div>
+    </div>`;
   };
 
   const allCountries = getList('countries').length ? getList('countries') : [...new Set(ALL.map(c => c.country).filter(Boolean))].sort();
@@ -1609,6 +1622,9 @@ function toggleNotifPanel() {
 document.addEventListener('click', e => {
   if (!document.getElementById('notif-wrap')?.contains(e.target)) {
     document.getElementById('notif-panel')?.classList.remove('open');
+  }
+  if (!e.target.closest('.role-picker')) {
+    document.querySelectorAll('.role-picker.open').forEach(el => el.classList.remove('open'));
   }
 });
 
