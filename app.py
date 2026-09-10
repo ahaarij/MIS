@@ -911,14 +911,26 @@ def _build_workbook(companies):
 @app.route('/export')
 @require_auth
 def export_excel():
+    ids_param      = request.args.get('ids', '').strip()
     country_filter = request.args.get('country', '').strip().upper()
     with get_db() as conn:
-        rows = conn.execute(
-            'SELECT * FROM companies ORDER BY country, cat, sort_order, id'
-        ).fetchall()
-    companies = [dict(r) for r in rows]
-    if country_filter:
-        companies = [c for c in companies if (c.get('country') or '').strip().upper() == country_filter]
+        if ids_param:
+            ids = [int(x) for x in ids_param.split(',') if x.strip().isdigit()]
+            if ids:
+                placeholders = ','.join('?' * len(ids))
+                by_id = {r['id']: dict(r) for r in conn.execute(
+                    f'SELECT * FROM companies WHERE id IN ({placeholders})', ids
+                ).fetchall()}
+                companies = [by_id[i] for i in ids if i in by_id]
+            else:
+                companies = []
+        else:
+            rows = conn.execute(
+                'SELECT * FROM companies ORDER BY country, cat, sort_order, id'
+            ).fetchall()
+            companies = [dict(r) for r in rows]
+            if country_filter:
+                companies = [c for c in companies if (c.get('country') or '').strip().upper() == country_filter]
 
     buf = io.BytesIO()
     _build_workbook(companies).save(buf)

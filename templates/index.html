@@ -2317,12 +2317,16 @@ function _exportCountry() {
 
 function exportExcel() {
   const ct = _exportCountry();
-  window.location.href = ct ? '/export?country=' + encodeURIComponent(ct) : '/export';
+  const base = ct ? ALL.filter(r => (r.country||'').toUpperCase() === ct.toUpperCase()) : ALL;
+  const sorted = sortRows(applyFilters(base));
+  const ids = sorted.map(r => r.id).join(',');
+  window.location.href = '/export?ids=' + encodeURIComponent(ids);
 }
 
 function exportPDF() {
   const ct = _exportCountry();
-  const rows = applyFilters(ct ? ALL.filter(r => (r.country||'').toUpperCase() === ct.toUpperCase()) : ALL);
+  const base = ct ? ALL.filter(r => (r.country||'').toUpperCase() === ct.toUpperCase()) : ALL;
+  const rows = sortRows(applyFilters(base));
   const win = window.open('', '_blank');
   const now = new Date();
   const dateStr = now.toLocaleDateString('en-GB', {day:'2-digit', month:'short', year:'numeric'});
@@ -2342,49 +2346,55 @@ function exportPDF() {
     return v;
   }
 
-  const HK = r => ['HK','HONG KONG'].includes((r.country||'').trim().toUpperCase());
-  const uae    = rows.filter(r => (r.country||'').trim().toUpperCase() === 'UAE');
-  const hk     = rows.filter(r => HK(r));
-  const others = rows.filter(r => (r.country||'').trim().toUpperCase() !== 'UAE' && !HK(r));
-
-  const sections = [];
-  if (uae.length) sections.push({label:'UAE', rows:uae});
-  const byCountry = {};
-  others.forEach(r => { const k = r.country||'Other'; (byCountry[k]=byCountry[k]||[]).push(r); });
-  Object.keys(byCountry).sort().forEach(ct => sections.push({label:ct, rows:byCountry[ct]}));
-  if (hk.length) sections.push({label:'Hong Kong', rows:hk});
+  function rowHTML_pdf(r) {
+    const cat = r.cat||'';
+    const catCls = cat==='A' ? 'ca' : cat==='B' ? 'cb' : '';
+    const hlBg = {yellow:'#FFE566',green:'#86EFAC',red:'#FCA5A5',blue:'#93C5FD',orange:'#FDBA74'}[r.highlight||''] || '';
+    const tdS = hlBg ? ` style="background-image:linear-gradient(${hlBg},${hlBg});background-color:${hlBg}"` : '';
+    return `<tr>
+      <td class="tc"${tdS}>${escH(r.sr_no)}</td>
+      <td class="tc"${tdS}><span class="ct ${catCls}">${escH(cat)}</span></td>
+      <td class="tl co"${tdS}>${escH(r.company_name)}</td>
+      <td class="tl"${tdS}>${escH(r.activity)}</td>
+      <td class="tc"${tdS}>${escH(r.country)}</td>
+      <td class="tc"${tdS}>${fmtD(r.dnb_rep_validity)}</td>
+      <td class="tc fw"${tdS}>${escH(r.dnb_rating)||'—'}</td>
+      <td class="tc"${tdS}>${escH(r.dnb_processed_by)||'—'}</td>
+      <td class="tc"${tdS}>${fmtD(r.audit_rep)}</td>
+      <td class="tc"${tdS}>${escH(r.audit_processed_by)||'—'}</td>
+      <td class="tc"${tdS}>${escH(r.audit_prepared_by)||'—'}</td>
+      <td class="tc"${tdS}>${fmtD(r.mgtm_ac_q1)}</td>
+      <td class="tc"${tdS}>${fmtD(r.mgtm_ac_q2)}</td>
+      <td class="tc"${tdS}>${fmtD(r.mgtm_ac_q3)}</td>
+      <td class="tc"${tdS}>${fmtD(r.mgtm_ac_q4)}</td>
+      <td class="tc"${tdS}>${escH(r.aecb_dir)||'—'}</td>
+      <td class="tc"${tdS}>${fmtD(r.aecb_com)}</td>
+      <td class="tc"${tdS}>${escH(r.cibil_dir)||'—'}</td>
+      <td class="tl sm">${escH(r.remarks)}</td>
+    </tr>`;
+  }
 
   let bodyHTML = '';
-  sections.forEach((sec, si) => {
-    bodyHTML += `<tr class="sep"><td colspan="19">${escH(sec.label)}</td></tr>`;
-    sec.rows.forEach(r => {
-      const cat = r.cat||'';
-      const catCls = cat==='A' ? 'ca' : cat==='B' ? 'cb' : '';
-      const hlBg = {yellow:'#FFE566',green:'#86EFAC',red:'#FCA5A5',blue:'#93C5FD',orange:'#FDBA74'}[r.highlight||''] || '';
-      const tdS = hlBg ? ` style="background-image:linear-gradient(${hlBg},${hlBg});background-color:${hlBg}"` : '';
-      bodyHTML += `<tr>
-        <td class="tc"${tdS}>${escH(r.sr_no)}</td>
-        <td class="tc"${tdS}><span class="ct ${catCls}">${escH(cat)}</span></td>
-        <td class="tl co"${tdS}>${escH(r.company_name)}</td>
-        <td class="tl"${tdS}>${escH(r.activity)}</td>
-        <td class="tc"${tdS}>${escH(r.country)}</td>
-        <td class="tc"${tdS}>${fmtD(r.dnb_rep_validity)}</td>
-        <td class="tc fw"${tdS}>${escH(r.dnb_rating)||'—'}</td>
-        <td class="tc"${tdS}>${escH(r.dnb_processed_by)||'—'}</td>
-        <td class="tc"${tdS}>${fmtD(r.audit_rep)}</td>
-        <td class="tc"${tdS}>${escH(r.audit_processed_by)||'—'}</td>
-        <td class="tc"${tdS}>${escH(r.audit_prepared_by)||'—'}</td>
-        <td class="tc"${tdS}>${fmtD(r.mgtm_ac_q1)}</td>
-        <td class="tc"${tdS}>${fmtD(r.mgtm_ac_q2)}</td>
-        <td class="tc"${tdS}>${fmtD(r.mgtm_ac_q3)}</td>
-        <td class="tc"${tdS}>${fmtD(r.mgtm_ac_q4)}</td>
-        <td class="tc"${tdS}>${escH(r.aecb_dir)||'—'}</td>
-        <td class="tc"${tdS}>${fmtD(r.aecb_com)}</td>
-        <td class="tc"${tdS}>${escH(r.cibil_dir)||'—'}</td>
-        <td class="tl sm">${escH(r.remarks)}</td>
-      </tr>`;
+  if (sortCol) {
+    // User has an active sort — flat list, no country section headers
+    bodyHTML = rows.map(rowHTML_pdf).join('');
+  } else {
+    // Default — group by country sections
+    const HK = r => ['HK','HONG KONG'].includes((r.country||'').trim().toUpperCase());
+    const uae    = rows.filter(r => (r.country||'').trim().toUpperCase() === 'UAE');
+    const hk     = rows.filter(r => HK(r));
+    const others = rows.filter(r => (r.country||'').trim().toUpperCase() !== 'UAE' && !HK(r));
+    const sections = [];
+    if (uae.length) sections.push({label:'UAE', rows:uae});
+    const byCountry = {};
+    others.forEach(r => { const k = r.country||'Other'; (byCountry[k]=byCountry[k]||[]).push(r); });
+    Object.keys(byCountry).sort().forEach(k => sections.push({label:k, rows:byCountry[k]}));
+    if (hk.length) sections.push({label:'Hong Kong', rows:hk});
+    sections.forEach(sec => {
+      bodyHTML += `<tr class="sep"><td colspan="19">${escH(sec.label)}</td></tr>`;
+      bodyHTML += sec.rows.map(rowHTML_pdf).join('');
     });
-  });
+  }
 
   win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8">
 <title>MIS Export — ${dateStr}</title>
