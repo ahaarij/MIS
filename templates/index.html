@@ -719,7 +719,7 @@ body.view-only .edit-only { display:none !important; }
   <div class="sidebar-footer">
     <div class="sb-user"><div class="sb-avatar" id="sb-av">?</div><span class="sb-name" id="sb-name">Loading…</span></div>
     <a class="sb-logout" href="/logout"><i class="bi bi-box-arrow-left"></i> Sign out</a>
-    <div style="text-align:center;margin-top:6px;font-size:10px;color:rgba(255,255,255,.45);letter-spacing:.04em;">v1.7</div>
+    <div style="text-align:center;margin-top:6px;font-size:10px;color:rgba(255,255,255,.45);letter-spacing:.04em;">v1.8</div>
   </div>
 </nav>
 
@@ -1986,15 +1986,22 @@ function renderGrid(rows) {
           <div class="cc-top">${c.cat ? `<span class="cat-badge cat-${esc(c.cat)}">${esc(c.cat)}</span>` : ''}${esc(c.cat||'—')}</div>
           <div class="cc-name">${esc(c.company_name)}</div>
           ${c.activity ? `<div class="cc-act">${esc(c.activity)}</div>` : ''}
-          <div class="cc-pills">${statusPill(c.dnb_rep_validity,'D&B')}${statusPill(c.audit_rep,'Audit')}</div>
+          <div class="cc-pills">${statusPill(c.dnb_rep_validity,'D&B')}${statusPill(c.audit_rep,'Audit',true)}</div>
         </div>
       </div>`).join('')}
     </div>`).join('');
 }
 
-function statusPill(val, label) {
+function statusPill(val, label, showDate) {
   const d = parseDate(val);
   if (!d) return '';
+  if (showDate) {
+    const dd = String(d.getDate()).padStart(2,'0');
+    const mm = String(d.getMonth()+1).padStart(2,'0');
+    const yyyy = d.getFullYear();
+    const recent = yyyy >= new Date().getFullYear() - 1;
+    return `<span class="spill ${recent ? 'spill-ok' : 'spill-exp'}">Last ${label}: ${dd}.${mm}.${yyyy}</span>`;
+  }
   const diff = (d - new Date()) / 864e5;
   if (diff < 0)  return `<span class="spill spill-exp">${label} Expired</span>`;
   if (diff < 30) return `<span class="spill spill-soon">${label} Soon</span>`;
