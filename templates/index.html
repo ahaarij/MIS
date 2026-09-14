@@ -770,7 +770,10 @@ body.view-only .edit-only { display:none !important; }
       <div class="row g-3 mt-3" id="dash-tl-row">
         <div class="col-12">
           <div class="timeline-panel">
-            <div class="ap-head"><i class="bi bi-calendar2-range-fill"></i>Next 60 Days — Actions Due</div>
+            <div class="ap-head" style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+              <span><i class="bi bi-calendar2-range-fill"></i>Next 60 Days — Actions Due</span>
+              <select id="tl-country-sel" onchange="renderTimeline()" style="font-size:.75rem;padding:3px 7px;border:1.5px solid var(--border);border-radius:6px;background:var(--surface);color:var(--t1);font-family:inherit;cursor:pointer"></select>
+            </div>
             <div class="tl-list" id="tl-list"></div>
           </div>
         </div>
@@ -2093,22 +2096,35 @@ function renderDashboard() {
   document.getElementById('alerts-mgtm').innerHTML  = mgtmAlertHTML(mgtmAlerts);
   renderNotifications();
 
-  // ── 60-day timeline ────────────────────────────────────────────────────────
+  // ── 60-day timeline — populate country dropdown ────────────────────────────
+  const tlSel = document.getElementById('tl-country-sel');
+  const tlCountries = [...new Set(ALL.map(c => (c.country||'').trim()).filter(Boolean))].sort();
+  const prevVal = tlSel.value;
+  tlSel.innerHTML = tlCountries.map(ct => `<option value="${esc(ct)}">${esc(ct)}</option>`).join('');
+  if (prevVal && tlCountries.includes(prevVal)) tlSel.value = prevVal;
+
+  renderTimeline();
+}
+
+function renderTimeline() {
+  const now = new Date();
+  const ct = (document.getElementById('tl-country-sel').value || '').trim().toUpperCase();
   const tlItems = [];
   ALL.forEach(c => {
+    if ((c.country||'').trim().toUpperCase() !== ct) return;
     const checks = [
-      { val: c.dnb_rep_validity, label: 'D&B Report',   cls: 'tt-dnb'   },
-      { val: c.audit_rep,        label: 'Audit Report',  cls: 'tt-audit' },
-      { val: c.mgtm_ac_q1,      label: 'Mgtm Q1',       cls: 'tt-mgtm'  },
-      { val: c.mgtm_ac_q2,      label: 'Mgtm Q2',       cls: 'tt-mgtm'  },
-      { val: c.mgtm_ac_q3,      label: 'Mgtm Q3',       cls: 'tt-mgtm'  },
-      { val: c.mgtm_ac_q4,      label: 'Mgtm Q4',       cls: 'tt-mgtm'  },
+      { val: c.dnb_rep_validity, label: 'D&B Report',  cls: 'tt-dnb'  },
+      { val: c.audit_rep,        label: 'Audit Report', cls: 'tt-audit' },
+      { val: c.mgtm_ac_q1,      label: 'Mgtm Q1',      cls: 'tt-mgtm' },
+      { val: c.mgtm_ac_q2,      label: 'Mgtm Q2',      cls: 'tt-mgtm' },
+      { val: c.mgtm_ac_q3,      label: 'Mgtm Q3',      cls: 'tt-mgtm' },
+      { val: c.mgtm_ac_q4,      label: 'Mgtm Q4',      cls: 'tt-mgtm' },
     ];
     checks.forEach(({ val, label, cls }) => {
       const d = parseDate(val);
       if (!d) return;
       const diff = Math.ceil((d - now) / 864e5);
-      if (diff <= 60) tlItems.push({ co: c.company_name, id: c.id, label, cls, d, diff, dateStr: val });
+      if (diff <= 60) tlItems.push({ co: c.company_name, id: c.id, label, cls, d, diff });
     });
   });
   tlItems.sort((a, b) => a.d - b.d);
