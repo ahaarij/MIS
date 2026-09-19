@@ -823,12 +823,12 @@ body.view-only .edit-only { display:none !important; }
             <th class="sc3 gh-base" style="min-width:200px" data-sf="company_name">Company Name</th>
             <th class="gh-base"  style="min-width:140px"   data-sf="activity">Activity</th>
             <th class="gh-base"  style="width:75px"        data-sf="country">Country</th>
-            <th class="gh-dnb"   style="width:110px"       data-sf="dnb_rep_validity">D&amp;B Validity</th>
-            <th class="gh-dnb"   style="width:85px"        data-sf="dnb_rating">D&amp;B Rating</th>
-            <th class="gh-dnb"   style="width:118px"       data-sf="dnb_processed_by">Processed By</th>
             <th class="gh-audit" style="width:100px"       data-sf="audit_rep">Last Audit</th>
             <th class="gh-audit" style="width:118px"       data-sf="audit_processed_by">Processed By</th>
             <th class="gh-audit" style="width:118px"       data-sf="audit_prepared_by">Auditor Name</th>
+            <th class="gh-dnb"   style="width:110px"       data-sf="dnb_rep_validity">D&amp;B Validity</th>
+            <th class="gh-dnb"   style="width:85px"        data-sf="dnb_rating">D&amp;B Rating</th>
+            <th class="gh-dnb"   style="width:118px"       data-sf="dnb_processed_by">Processed By</th>
             <th class="gh-mgtm"  style="width:88px"        data-sf="mgtm_ac_q1">Mgtm Q1</th>
             <th class="gh-mgtm"  style="width:88px"        data-sf="mgtm_ac_q2">Mgtm Q2</th>
             <th class="gh-mgtm"  style="width:88px"        data-sf="mgtm_ac_q3">Mgtm Q3</th>
@@ -1898,12 +1898,12 @@ function rowHTML(c) {
     <td class="sc3 co-name">${esc(c.company_name)}</td>
     <td style="color:var(--t2)">${esc(c.activity)}</td>
     <td class="text-center fw-semibold" style="font-size:11px">${esc(c.country)}</td>
-    <td class="text-center">${fmtDate(c.dnb_rep_validity)}</td>
-    <td class="text-center fw-semibold">${c.dnb_rating ? esc(c.dnb_rating) : dash()}</td>
-    <td class="text-center" style="color:var(--t2)">${c.dnb_processed_by ? esc(c.dnb_processed_by) : dash()}</td>
     <td class="text-center">${fmtDate(c.audit_rep)}</td>
     <td class="text-center" style="color:var(--t2)">${c.audit_processed_by ? esc(c.audit_processed_by) : dash()}</td>
     <td class="text-center" style="color:var(--t2)">${c.audit_prepared_by ? esc(c.audit_prepared_by) : dash()}</td>
+    <td class="text-center">${fmtDate(c.dnb_rep_validity)}</td>
+    <td class="text-center fw-semibold">${c.dnb_rating ? esc(c.dnb_rating) : dash()}</td>
+    <td class="text-center" style="color:var(--t2)">${c.dnb_processed_by ? esc(c.dnb_processed_by) : dash()}</td>
     <td class="text-center">${fmtDate(c.mgtm_ac_q1)}</td>
     <td class="text-center">${fmtDate(c.mgtm_ac_q2)}</td>
     <td class="text-center">${fmtDate(c.mgtm_ac_q3)}</td>
@@ -2385,12 +2385,12 @@ function exportPDF() {
       <td class="tl co"${tdS}>${escH(r.company_name)}</td>
       <td class="tl"${tdS}>${escH(r.activity)}</td>
       <td class="tc"${tdS}>${escH(r.country)}</td>
-      <td class="tc"${tdS}>${fmtD(r.dnb_rep_validity,true)}</td>
-      <td class="tc fw"${tdS}>${escH(r.dnb_rating)||'—'}</td>
-      <td class="tc"${tdS}>${escH(r.dnb_processed_by)||'—'}</td>
       <td class="tc"${tdS}>${fmtD(r.audit_rep,true)}</td>
       <td class="tc"${tdS}>${escH(r.audit_processed_by)||'—'}</td>
       <td class="tc"${tdS}>${escH(r.audit_prepared_by)||'—'}</td>
+      <td class="tc"${tdS}>${fmtD(r.dnb_rep_validity,true)}</td>
+      <td class="tc fw"${tdS}>${escH(r.dnb_rating)||'—'}</td>
+      <td class="tc"${tdS}>${escH(r.dnb_processed_by)||'—'}</td>
       <td class="tc"${tdS}>${fmtD(r.mgtm_ac_q1,true)}</td>
       <td class="tc"${tdS}>${fmtD(r.mgtm_ac_q2,true)}</td>
       <td class="tc"${tdS}>${fmtD(r.mgtm_ac_q3,true)}</td>
@@ -2464,8 +2464,8 @@ tbody td{padding:2.5px 2px;border:1px solid #c8d0e8;vertical-align:top;overflow:
   <col class="ad"><col class="ac"><col class="ci"><col class="rm">
 </colgroup><thead><tr>
   <th>SR</th><th>Cat</th><th class="tl">Company Name</th><th class="tl">Activity</th><th>Country</th>
-  <th>D&amp;B Valid</th><th>D&amp;B Rtg</th><th>D&amp;B Proc</th>
   <th>Last Audit</th><th>Audit Proc</th><th>Auditor Name</th>
+  <th>D&amp;B Valid</th><th>D&amp;B Rtg</th><th>D&amp;B Proc</th>
   <th>Q1</th><th>Q2</th><th>Q3</th><th>Q4</th>
   <th>AECB Dir</th><th>AECB Com</th><th>Cibil Dir</th><th class="tl">Remarks</th>
 </tr></thead><tbody>${bodyHTML}</tbody></table>

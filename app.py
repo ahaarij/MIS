@@ -801,8 +801,8 @@ def set_highlight(company_id):
 
 EXCEL_HEADERS = [
     'SR.No.', 'Cat', 'Company Name', 'Activity', 'Country',
-    'D&B Rep Validity', 'D&B Rating', 'D&B Processed By',
     'Last Audit', 'Audit Processed By', 'Auditor Name',
+    'D&B Rep Validity', 'D&B Rating', 'D&B Processed By',
     'Mgtm A/c Q1', 'Mgtm A/c Q2', 'Mgtm A/c Q3', 'Mgtm A/c Q4',
     'AECB (Dir)', 'AECB (Com)', 'Cibil (Dir)',
     'Remarks',
@@ -811,15 +811,15 @@ EXCEL_HEADERS = [
 EXCEL_FIELDS = [
     None,  # SR.No. — computed
     'cat', 'company_name', 'activity', 'country',
-    'dnb_rep_validity', 'dnb_rating', 'dnb_processed_by',
     'audit_rep', 'audit_processed_by', 'audit_prepared_by',
+    'dnb_rep_validity', 'dnb_rating', 'dnb_processed_by',
     'mgtm_ac_q1', 'mgtm_ac_q2', 'mgtm_ac_q3', 'mgtm_ac_q4',
     'aecb_dir', 'aecb_com', 'cibil_dir',
     'remarks',
 ]
 
 # Column widths (one per column, A–S)
-COL_WIDTHS = [8, 6, 35, 25, 10, 16, 13, 18, 13, 18, 18, 13, 13, 13, 13, 13, 13, 13, 45]
+COL_WIDTHS = [8, 6, 35, 25, 10, 13, 18, 18, 16, 13, 18, 13, 13, 13, 13, 13, 13, 13, 45]
 
 LAST_COL = get_column_letter(len(EXCEL_HEADERS))  # 'S'
 
