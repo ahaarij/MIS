@@ -1101,7 +1101,10 @@ body.view-only .edit-only { display:none !important; }
         <div class="row g-2">
           <div class="col-md-4">
             <label class="form-label mb-1">AECB (Director)</label>
-            <select class="form-select form-select-sm" id="f-aecb_dir"></select>
+            <div class="date-group">
+              <input type="date" class="form-control form-control-sm" id="f-aecb_dir">
+              <div class="na-wrap"><input type="checkbox" class="form-check-input" id="f-aecb_dir_na" onchange="toggleNA('aecb_dir')"><label for="f-aecb_dir_na">N/A</label></div>
+            </div>
           </div>
           <div class="col-md-4">
             <label class="form-label mb-1">AECB (Com)</label>
@@ -1319,7 +1322,7 @@ const bsDelModal = () => bootstrap.Modal.getOrCreateInstance(document.getElement
 const bsToast    = () => bootstrap.Toast.getOrCreateInstance(document.getElementById('toast'), { delay:2500 });
 
 // ── Date field helpers ────────────────────────────────────────────────────────
-const DATE_FIELDS = ['dnb_rep_validity','audit_rep','mgtm_ac_q1','mgtm_ac_q2','mgtm_ac_q3','mgtm_ac_q4','aecb_com'];
+const DATE_FIELDS = ['dnb_rep_validity','audit_rep','mgtm_ac_q1','mgtm_ac_q2','mgtm_ac_q3','mgtm_ac_q4','aecb_com','aecb_dir'];
 
 function toInputDate(val) {
   if (!val) return '';
@@ -1385,7 +1388,7 @@ function refreshSelects() {
   populateSelect('f-country',            getList('countries'), true);
   populateSelect('f-activity',           getList('activities'), true);
   populateSelect('f-dnb_rating',         getList('ratings'), true);
-  populateSelect('f-aecb_dir',           getList('aecb'), true);
+  // aecb_dir is now a date field — no select to populate
   populateSelect('f-dnb_processed_by',   getList('staff'), true);
   populateSelect('f-audit_processed_by', getList('staff'), true);
   populateSelect('f-audit_prepared_by',  getList('staff'), true);
@@ -1819,7 +1822,7 @@ function clearSel() {
 }
 
 // ── Sort ──────────────────────────────────────────────────────────────────────
-const DATE_SF = new Set(['dnb_rep_validity','audit_rep','mgtm_ac_q1','mgtm_ac_q2','mgtm_ac_q3','mgtm_ac_q4','aecb_com']);
+const DATE_SF = new Set(['dnb_rep_validity','audit_rep','mgtm_ac_q1','mgtm_ac_q2','mgtm_ac_q3','mgtm_ac_q4','aecb_com','aecb_dir']);
 
 function sortRows(rows) {
   if (!sortCol) return rows;
@@ -1909,7 +1912,7 @@ function rowHTML(c) {
     <td class="text-center">${fmtDate(c.mgtm_ac_q3)}</td>
     <td class="text-center">${fmtDate(c.mgtm_ac_q4)}</td>
     <td class="text-center">${fmtAecbDir(c.aecb_dir)}</td>
-    <td class="text-center">${fmtDate(c.aecb_com)}</td>
+    <td class="text-center">${fmtDate(c.aecb_com,'aecb')}</td>
     <td class="text-center" style="color:var(--t2)">${c.cibil_dir ? esc(c.cibil_dir) : dash()}</td>
     <td style="color:var(--t2);font-size:11.5px">${esc(c.remarks)}</td>
     <td class="text-center" onclick="event.stopPropagation()">${hlPicker(c.id, c.highlight)}</td>
@@ -2250,7 +2253,7 @@ function openAdd() {
     if (DATE_FIELDS.includes(f)) { loadDateField(f, ''); return; }
     const el = document.getElementById('f-' + f);
     if (!el) return;
-    el.value = f === 'country' ? (getList('countries')[0] || '') : f === 'aecb_dir' ? (getList('aecb')[1] || '') : '';
+    el.value = f === 'country' ? (getList('countries')[0] || '') : '';
   });
   bsModal().show();
 }
@@ -2370,6 +2373,8 @@ function exportPDF() {
       let color;
       if (colorize === 'audit') {
         color = (new Date() - d) / 864e5 <= 365 ? '#16a34a' : '#dc2626';
+      } else if (colorize === 'aecb') {
+        color = (new Date() - d) / 864e5 <= 90 ? '#16a34a' : '#dc2626';
       } else {
         const diff = Math.ceil((d - new Date()) / 864e5);
         color = diff < 0 ? '#dc2626' : diff <= 30 ? '#d97706' : '#16a34a';
@@ -2400,8 +2405,8 @@ function exportPDF() {
       <td class="tc"${tdS}>${fmtD(r.mgtm_ac_q2,true)}</td>
       <td class="tc"${tdS}>${fmtD(r.mgtm_ac_q3,true)}</td>
       <td class="tc"${tdS}>${fmtD(r.mgtm_ac_q4,true)}</td>
-      <td class="tc"${tdS}>${escH(r.aecb_dir)||'—'}</td>
-      <td class="tc"${tdS}>${fmtD(r.aecb_com,true)}</td>
+      <td class="tc"${tdS}>${fmtD(r.aecb_dir,'aecb')}</td>
+      <td class="tc"${tdS}>${fmtD(r.aecb_com,'aecb')}</td>
       <td class="tc"${tdS}>${escH(r.cibil_dir)||'—'}</td>
       <td class="tl sm">${escH(r.remarks)}</td>
     </tr>`;
@@ -2528,8 +2533,10 @@ function fmtDate(val, isAudit) {
   const d = parseDate(val);
   if (d) {
     let cls;
-    if (isAudit) {
+    if (isAudit === true || isAudit === 'audit') {
       cls = (new Date() - d) / 864e5 <= 365 ? 'd-valid' : 'd-expired';
+    } else if (isAudit === 'aecb') {
+      cls = (new Date() - d) / 864e5 <= 90 ? 'd-valid' : 'd-expired';
     } else {
       cls = d < new Date() ? 'd-expired' : 'd-valid';
     }
@@ -2539,10 +2546,7 @@ function fmtDate(val, isAudit) {
 }
 function fmtAecbDir(val) {
   if (!val) return dash();
-  const v = val.trim().toUpperCase();
-  if (v==='Y') return `<span class="spill spill-ok">Y</span>`;
-  if (v==='N') return `<span class="spill" style="background:var(--surface-2);color:var(--t2)">N</span>`;
-  return fmtDate(val);
+  return fmtDate(val, 'aecb');
 }
 function toast(msg, type='success') {
   const el = document.getElementById('toast');

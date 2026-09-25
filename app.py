@@ -824,9 +824,10 @@ COL_WIDTHS = [8, 6, 35, 25, 10, 13, 18, 18, 16, 13, 18, 13, 13, 13, 13, 13, 13, 
 LAST_COL = get_column_letter(len(EXCEL_HEADERS))  # 'S'
 
 
-DATE_FIELDS = {'dnb_rep_validity', 'audit_rep', 'mgtm_ac_q1', 'mgtm_ac_q2', 'mgtm_ac_q3', 'mgtm_ac_q4', 'aecb_com'}
+DATE_FIELDS = {'dnb_rep_validity', 'audit_rep', 'mgtm_ac_q1', 'mgtm_ac_q2', 'mgtm_ac_q3', 'mgtm_ac_q4', 'aecb_com', 'aecb_dir'}
 
 AUDIT_DATE_FIELDS = {'audit_rep'}
+AECB_DATE_FIELDS  = {'aecb_dir', 'aecb_com'}
 
 def _date_color(val, field=None):
     """Return openpyxl hex color string for a date value, or None."""
@@ -834,11 +835,15 @@ def _date_color(val, field=None):
         return None
     from datetime import datetime as dt
     v = str(val).strip()
+    if v.upper() in ('NA', 'N/A'):
+        return None
     for fmt in ('%d-%m-%Y', '%Y-%m-%d', '%d/%m/%Y'):
         try:
             d = dt.strptime(v, fmt)
             if field in AUDIT_DATE_FIELDS:
                 return '16A34A' if (dt.now() - d).days <= 365 else 'FF0000'
+            if field in AECB_DATE_FIELDS:
+                return '16A34A' if (dt.now() - d).days <= 90 else 'FF0000'
             diff = (d - dt.now()).days
             if diff < 0:   return 'FF0000'
             if diff <= 30: return 'D97706'
