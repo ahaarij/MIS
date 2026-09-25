@@ -826,7 +826,9 @@ LAST_COL = get_column_letter(len(EXCEL_HEADERS))  # 'S'
 
 DATE_FIELDS = {'dnb_rep_validity', 'audit_rep', 'mgtm_ac_q1', 'mgtm_ac_q2', 'mgtm_ac_q3', 'mgtm_ac_q4', 'aecb_com'}
 
-def _date_color(val):
+AUDIT_DATE_FIELDS = {'audit_rep'}
+
+def _date_color(val, field=None):
     """Return openpyxl hex color string for a date value, or None."""
     if not val:
         return None
@@ -835,10 +837,12 @@ def _date_color(val):
     for fmt in ('%d-%m-%Y', '%Y-%m-%d', '%d/%m/%Y'):
         try:
             d = dt.strptime(v, fmt)
+            if field in AUDIT_DATE_FIELDS:
+                return '16A34A' if d.year >= dt.now().year - 1 else 'FF0000'
             diff = (d - dt.now()).days
-            if diff < 0:   return 'FF0000'   # red — expired
-            if diff <= 30: return 'D97706'   # amber — expiring soon
-            return '16A34A'                   # green — ok
+            if diff < 0:   return 'FF0000'
+            if diff <= 30: return 'D97706'
+            return '16A34A'
         except ValueError:
             pass
     return None
@@ -906,7 +910,7 @@ def _build_workbook(companies):
             for col_i, field in enumerate(EXCEL_FIELDS, 1):
                 val = sr if field is None else (comp.get(field) or '')
                 cell = ws.cell(row=row_num, column=col_i, value=val)
-                date_hex = _date_color(val) if field in DATE_FIELDS else None
+                date_hex = _date_color(val, field) if field in DATE_FIELDS else None
                 cell.font      = Font(name='Calibri', size=10, color=date_hex, bold=date_hex is not None) if date_hex else data_font
                 cell.alignment = center if col_i <= 2 else left
                 cell.border    = bdr

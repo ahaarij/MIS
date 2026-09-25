@@ -1898,7 +1898,7 @@ function rowHTML(c) {
     <td class="sc3 co-name">${esc(c.company_name)}</td>
     <td style="color:var(--t2)">${esc(c.activity)}</td>
     <td class="text-center fw-semibold" style="font-size:11px">${esc(c.country)}</td>
-    <td class="text-center">${fmtDate(c.audit_rep)}</td>
+    <td class="text-center">${fmtDate(c.audit_rep, true)}</td>
     <td class="text-center" style="color:var(--t2)">${c.audit_processed_by ? esc(c.audit_processed_by) : dash()}</td>
     <td class="text-center" style="color:var(--t2)">${c.audit_prepared_by ? esc(c.audit_prepared_by) : dash()}</td>
     <td class="text-center">${fmtDate(c.dnb_rep_validity)}</td>
@@ -2367,8 +2367,13 @@ function exportPDF() {
     if (m) { display = `${m[1]}/${m[2]}/${m[3].slice(2)}`; d = new Date(+m[3], +m[2]-1, +m[1]); }
     else { d = new Date(v); display = isNaN(d) ? v : d.toLocaleDateString('en-GB',{day:'2-digit',month:'2-digit',year:'2-digit'}); }
     if (colorize && d && !isNaN(d)) {
-      const diff = Math.ceil((d - new Date()) / 864e5);
-      const color = diff < 0 ? '#dc2626' : diff <= 30 ? '#d97706' : '#16a34a';
+      let color;
+      if (colorize === 'audit') {
+        color = d.getFullYear() >= new Date().getFullYear() - 1 ? '#16a34a' : '#dc2626';
+      } else {
+        const diff = Math.ceil((d - new Date()) / 864e5);
+        color = diff < 0 ? '#dc2626' : diff <= 30 ? '#d97706' : '#16a34a';
+      }
       return `<span style="color:${color};font-weight:600">${display}</span>`;
     }
     return display;
@@ -2385,7 +2390,7 @@ function exportPDF() {
       <td class="tl co"${tdS}>${escH(r.company_name)}</td>
       <td class="tl"${tdS}>${escH(r.activity)}</td>
       <td class="tc"${tdS}>${escH(r.country)}</td>
-      <td class="tc"${tdS}>${fmtD(r.audit_rep,true)}</td>
+      <td class="tc"${tdS}>${fmtD(r.audit_rep,'audit')}</td>
       <td class="tc"${tdS}>${escH(r.audit_processed_by)||'—'}</td>
       <td class="tc"${tdS}>${escH(r.audit_prepared_by)||'—'}</td>
       <td class="tc"${tdS}>${fmtD(r.dnb_rep_validity,true)}</td>
@@ -2516,12 +2521,20 @@ function catBadge(cat) {
   if (!cat) return '';
   return `<span class="cat-badge cat-${cat}">${cat}</span>`;
 }
-function fmtDate(val) {
+function fmtDate(val, isAudit) {
   if (!val) return dash();
   const v = val.trim().toUpperCase();
   if (v==='NA'||v==='N/A') return `<span class="d-na" style="font-size:11px">NA</span>`;
   const d = parseDate(val);
-  if (d) { const cls = d < new Date() ? 'd-expired' : 'd-valid'; return `<span class="${cls}" style="font-size:11px">${esc(val)}</span>`; }
+  if (d) {
+    let cls;
+    if (isAudit) {
+      cls = d.getFullYear() >= new Date().getFullYear() - 1 ? 'd-valid' : 'd-expired';
+    } else {
+      cls = d < new Date() ? 'd-expired' : 'd-valid';
+    }
+    return `<span class="${cls}" style="font-size:11px">${esc(val)}</span>`;
+  }
   return `<span style="font-size:11px">${esc(val)}</span>`;
 }
 function fmtAecbDir(val) {
