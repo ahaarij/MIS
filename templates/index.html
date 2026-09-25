@@ -2369,7 +2369,7 @@ function exportPDF() {
     if (colorize && d && !isNaN(d)) {
       let color;
       if (colorize === 'audit') {
-        color = d.getFullYear() >= new Date().getFullYear() - 1 ? '#16a34a' : '#dc2626';
+        color = (new Date() - d) / 864e5 <= 365 ? '#16a34a' : '#dc2626';
       } else {
         const diff = Math.ceil((d - new Date()) / 864e5);
         color = diff < 0 ? '#dc2626' : diff <= 30 ? '#d97706' : '#16a34a';
@@ -2529,7 +2529,7 @@ function fmtDate(val, isAudit) {
   if (d) {
     let cls;
     if (isAudit) {
-      cls = d.getFullYear() >= new Date().getFullYear() - 1 ? 'd-valid' : 'd-expired';
+      cls = (new Date() - d) / 864e5 <= 365 ? 'd-valid' : 'd-expired';
     } else {
       cls = d < new Date() ? 'd-expired' : 'd-valid';
     }

@@ -838,7 +838,7 @@ def _date_color(val, field=None):
         try:
             d = dt.strptime(v, fmt)
             if field in AUDIT_DATE_FIELDS:
-                return '16A34A' if d.year >= dt.now().year - 1 else 'FF0000'
+                return '16A34A' if (dt.now() - d).days <= 365 else 'FF0000'
             diff = (d - dt.now()).days
             if diff < 0:   return 'FF0000'
             if diff <= 30: return 'D97706'
